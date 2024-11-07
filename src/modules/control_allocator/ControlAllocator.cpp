@@ -219,7 +219,7 @@ ControlAllocator::update_effectiveness_source()
 		switch (source) {
 		case EffectivenessSource::NONE:
 		case EffectivenessSource::MULTIROTOR:
-			tmp = new ActuatorEffectivenessMultirotor(this);
+			tmp = new ActuatorEffectivenessTM(this);
 			break;
 
 		case EffectivenessSource::STANDARD_VTOL:
@@ -268,6 +268,9 @@ ControlAllocator::update_effectiveness_source()
 
 		case EffectivenessSource::HELICOPTER_COAXIAL:
 			tmp = new ActuatorEffectivenessHelicopterCoaxial(this);
+			break;
+		case EffectivenessSource::TM:
+			tmp = new ActuatorEffectivenessTM(this);
 			break;
 
 		default:
@@ -435,13 +438,6 @@ ControlAllocator::Run()
 
 			// Do allocation
 			_control_allocation[i]->allocate();
-			_actuator_effectiveness->allocateAuxilaryControls(dt, i, _control_allocation[i]->_actuator_sp); //flaps and spoilers
-			_actuator_effectiveness->updateSetpoint(c[i], i, _control_allocation[i]->_actuator_sp,
-								_control_allocation[i]->getActuatorMin(), _control_allocation[i]->getActuatorMax());
-
-			if (_has_slew_rate) {
-				_control_allocation[i]->applySlewRateLimit(dt);
-			}
 
 			_control_allocation[i]->clipActuatorSetpoint();
 		}
@@ -830,6 +826,9 @@ int ControlAllocator::print_status()
 		PX4_INFO("  maximum =");
 		_control_allocation[i]->getActuatorMax().T().print();
 		PX4_INFO("  Configured actuators: %i", _control_allocation[i]->numConfiguredActuators());
+
+		PX4_INFO("  Allocation Matrix =");
+		_control_allocation[i]->_mix.print();
 	}
 
 	if (_handled_motor_failure_bitmask) {

@@ -31,31 +31,26 @@
  *
  ****************************************************************************/
 
-#pragma once
+#include "ActuatorEffectivenessTM.hpp"
 
-#include "ActuatorEffectiveness.hpp"
-#include "ActuatorEffectivenessRotors.hpp"
+using namespace matrix;
 
-class ActuatorEffectivenessMultirotor : public ModuleParams, public ActuatorEffectiveness
+ActuatorEffectivenessTM::ActuatorEffectivenessTM(ModuleParams *parent)
+	: ModuleParams(parent),
+	  _mc_rotors(this)
 {
-public:
-	ActuatorEffectivenessMultirotor(ModuleParams *parent);
-	virtual ~ActuatorEffectivenessMultirotor() = default;
+}
 
-	bool getEffectivenessMatrix(Configuration &configuration, EffectivenessUpdateReason external_update) override;
-
-	void getDesiredAllocationMethod(AllocationMethod allocation_method_out[MAX_NUM_MATRICES]) const override
-	{
-		allocation_method_out[0] = AllocationMethod::PSEUDO_INVERSE;
+bool
+ActuatorEffectivenessTM::getEffectivenessMatrix(Configuration &configuration,
+		EffectivenessUpdateReason external_update)
+{
+	if (external_update == EffectivenessUpdateReason::NO_EXTERNAL_UPDATE) {
+		return false;
 	}
 
-	void getNormalizeRPY(bool normalize[MAX_NUM_MATRICES]) const override
-	{
-		normalize[0] = true;
-	}
+	// Motors
+	const bool rotors_added_successfully = _mc_rotors.addActuators(configuration);
 
-	const char *name() const override { return "Multirotor"; }
-
-protected:
-	ActuatorEffectivenessRotors _mc_rotors;
-};
+	return rotors_added_successfully;
+}

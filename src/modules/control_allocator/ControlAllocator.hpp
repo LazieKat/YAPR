@@ -53,6 +53,7 @@
 #include <ActuatorEffectivenessUUV.hpp>
 #include <ActuatorEffectivenessHelicopter.hpp>
 #include <ActuatorEffectivenessHelicopterCoaxial.hpp>
+#include <ActuatorEffectivenessTM.hpp>
 
 #include <ControlAllocation.hpp>
 #include <ControlAllocationPseudoInverse.hpp>
@@ -139,7 +140,7 @@ private:
 	void publish_actuator_controls();
 
 	AllocationMethod _allocation_method_id{AllocationMethod::NONE};
-	ControlAllocation *_control_allocation[ActuatorEffectiveness::MAX_NUM_MATRICES] {}; 	///< class for control allocation calculations
+	ControlAllocationPseudoInverse *_control_allocation[ActuatorEffectiveness::MAX_NUM_MATRICES] {}; 	///< class for control allocation calculations
 	int _num_control_allocation{0};
 	hrt_abstime _last_effectiveness_update{0};
 
@@ -158,6 +159,7 @@ private:
 		HELICOPTER_TAIL_ESC = 10,
 		HELICOPTER_TAIL_SERVO = 11,
 		HELICOPTER_COAXIAL = 12,
+		TM = 13,
 	};
 
 	enum class FailureMode {

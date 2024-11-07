@@ -36,11 +36,11 @@
 #include "ActuatorEffectiveness.hpp"
 #include "ActuatorEffectivenessRotors.hpp"
 
-class ActuatorEffectivenessMultirotor : public ModuleParams, public ActuatorEffectiveness
+class ActuatorEffectivenessTM : public ModuleParams, public ActuatorEffectiveness
 {
 public:
-	ActuatorEffectivenessMultirotor(ModuleParams *parent);
-	virtual ~ActuatorEffectivenessMultirotor() = default;
+	ActuatorEffectivenessTM(ModuleParams *parent);
+	virtual ~ActuatorEffectivenessTM() = default;
 
 	bool getEffectivenessMatrix(Configuration &configuration, EffectivenessUpdateReason external_update) override;
 
@@ -54,7 +54,7 @@ public:
 		normalize[0] = true;
 	}
 
-	const char *name() const override { return "Multirotor"; }
+	const char *name() const override { return "TM"; }
 
 protected:
 	ActuatorEffectivenessRotors _mc_rotors;
