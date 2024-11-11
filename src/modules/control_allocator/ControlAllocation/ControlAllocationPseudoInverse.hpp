@@ -51,7 +51,7 @@ class ControlAllocationPseudoInverse: public ControlAllocation
 {
 public:
 	////    CUSTOM MODIFIED CODE    ////
-	const char * name() const { return "PseudoInverse"; }
+	virtual const char * name() const { return "PseudoInverse"; }
 	ControlAllocationPseudoInverse() {PX4_INFO("---------------------- ControlAllocationPseudoInverse --------------------------");};
 	////    END OF CUSTOM MODIFIED CODE    ////
 	virtual ~ControlAllocationPseudoInverse() = default;
@@ -61,9 +61,6 @@ public:
 				    const ActuatorVector &actuator_trim, const ActuatorVector &linearization_point, int num_actuators,
 				    bool update_normalization_scale) override;
 
-	////    CUSTOM MODIFIED CODE    ////
-	matrix::Matrix<float, NUM_ACTUATORS, NUM_AXES> _mix;
-	////    END OF CUSTOM MODIFIED CODE    ////
 protected:
 
 	bool _mix_update_needed{false};

@@ -14,9 +14,7 @@ public:
 				    const ActuatorVector &actuator_trim, const ActuatorVector &linearization_point, int num_actuators,
 				    bool update_normalization_scale) override;
 
-	matrix::Matrix<float, NUM_ACTUATORS, NUM_AXES> _mix;
-
-	const char * name() const { return "TM"; }
+	virtual const char * name() const { return "TM"; }
 protected:
 
 	bool _mix_update_needed{false};

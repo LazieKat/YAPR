@@ -147,7 +147,7 @@ private:
 
 	AllocationMethod _allocation_method_id{AllocationMethod::NONE};
 	////    CUSTOM CODE    ////
-	ControlAllocationTM *_control_allocation[ActuatorEffectiveness::MAX_NUM_MATRICES] {}; 	///< class for control allocation calculations
+	ControlAllocation *_control_allocation[ActuatorEffectiveness::MAX_NUM_MATRICES] {}; 	///< class for control allocation calculations
 	////    END CUSTOM CODE    ////
 	int _num_control_allocation{0};
 	hrt_abstime _last_effectiveness_update{0};

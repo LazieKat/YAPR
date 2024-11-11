@@ -178,28 +178,25 @@ ControlAllocator::update_allocation_method(bool force)
 				method = desired_methods[i];
 			}
 
-			////    CUSTOM MODIFIED CODE    ////
 			switch (method) {
 			case AllocationMethod::PSEUDO_INVERSE:
-				// _control_allocation[i] = new ControlAllocationPseudoInverse();
-				_control_allocation[i] = new ControlAllocationTM();
+				_control_allocation[i] = new ControlAllocationPseudoInverse();
 				break;
 
 			case AllocationMethod::SEQUENTIAL_DESATURATION:
-				// _control_allocation[i] = new ControlAllocationSequentialDesaturation();
-				_control_allocation[i] = new ControlAllocationTM();
+				_control_allocation[i] = new ControlAllocationSequentialDesaturation();
 				break;
 
+			////    CUSTOM MODIFIED CODE    ////
 			case AllocationMethod::TM:
 				_control_allocation[i] = new ControlAllocationTM();
-				// _control_allocation[i] = new ControlAllocationPseudoInverse();
 				break;
+			////    END OF CUSTOM MODIFIED CODE    ////
 
 			default:
 				PX4_ERR("Unknown allocation method");
 				break;
 			}
-			////    END OF CUSTOM MODIFIED CODE    ////
 
 			if (_control_allocation[i] == nullptr) {
 				PX4_ERR("alloc failed");

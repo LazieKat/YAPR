@@ -17,8 +17,6 @@ ControlAllocationTM::setEffectivenessMatrix(
 void
 ControlAllocationTM::updatePseudoInverse()
 {
-	PX4_INFO(" ---------------------- updatePseudoInverse --------------------------");
-
 	float mix[16][6] = {
 		{-0.4821,  0.7071,  0.7600, 0, 0, -1.0000},
 		{ 0.4821, -0.7071,  1.0000, 0, 0, -1.0000},

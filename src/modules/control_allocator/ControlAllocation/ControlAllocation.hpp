@@ -238,7 +238,7 @@ public:
 
 
 	////    CUSTOM MODIFIED CODE    ////
-	const char * name() const { return "Control Allocation"; }
+	virtual const char * name() const { return "Control Allocation"; }
 	////    END OF CUSTOM MODIFIED CODE    ////
 
 protected:

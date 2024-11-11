@@ -52,7 +52,7 @@ class ControlAllocationSequentialDesaturation: public ControlAllocationPseudoInv
 public:
 	////    CUSTOM CODE    ////
 	ControlAllocationSequentialDesaturation() : ModuleParams(nullptr) {PX4_INFO("---------------------- ControlAllocationSequentialDesaturation --------------------------");}
-	const char * name() const { return "SequentialDesaturation"; }
+	virtual const char * name() const { return "SequentialDesaturation"; }
 	////    END OF CUSTOM CODE    ////
 	virtual ~ControlAllocationSequentialDesaturation() = default;
 
