@@ -58,6 +58,9 @@
 #include <ControlAllocation.hpp>
 #include <ControlAllocationPseudoInverse.hpp>
 #include <ControlAllocationSequentialDesaturation.hpp>
+////    CUSTOM CODE    ////
+#include <ControlAllocationTM.hpp>
+////    END CUSTOM CODE    ////
 
 #include <lib/matrix/matrix/math.hpp>
 #include <lib/perf/perf_counter.h>
@@ -137,10 +140,15 @@ private:
 
 	void publish_control_allocator_status(int matrix_index);
 
+	////    CUSTOM CODE    ////
 	void publish_actuator_controls();
+	// void publish_actuator_controls(matrix::Vector<float, NUM_ACTUATORS> _actuator_sp);
+	////    END CUSTOM CODE    ////
 
 	AllocationMethod _allocation_method_id{AllocationMethod::NONE};
-	ControlAllocationPseudoInverse *_control_allocation[ActuatorEffectiveness::MAX_NUM_MATRICES] {}; 	///< class for control allocation calculations
+	////    CUSTOM CODE    ////
+	ControlAllocationTM *_control_allocation[ActuatorEffectiveness::MAX_NUM_MATRICES] {}; 	///< class for control allocation calculations
+	////    END CUSTOM CODE    ////
 	int _num_control_allocation{0};
 	hrt_abstime _last_effectiveness_update{0};
 
@@ -159,7 +167,9 @@ private:
 		HELICOPTER_TAIL_ESC = 10,
 		HELICOPTER_TAIL_SERVO = 11,
 		HELICOPTER_COAXIAL = 12,
+		////    CUSTOM MODIFIED CODE    ////
 		TM = 13,
+		////    END OF CUSTOM MODIFIED CODE    ////
 	};
 
 	enum class FailureMode {

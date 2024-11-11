@@ -178,19 +178,28 @@ ControlAllocator::update_allocation_method(bool force)
 				method = desired_methods[i];
 			}
 
+			////    CUSTOM MODIFIED CODE    ////
 			switch (method) {
 			case AllocationMethod::PSEUDO_INVERSE:
-				_control_allocation[i] = new ControlAllocationPseudoInverse();
+				// _control_allocation[i] = new ControlAllocationPseudoInverse();
+				_control_allocation[i] = new ControlAllocationTM();
 				break;
 
 			case AllocationMethod::SEQUENTIAL_DESATURATION:
-				_control_allocation[i] = new ControlAllocationSequentialDesaturation();
+				// _control_allocation[i] = new ControlAllocationSequentialDesaturation();
+				_control_allocation[i] = new ControlAllocationTM();
+				break;
+
+			case AllocationMethod::TM:
+				_control_allocation[i] = new ControlAllocationTM();
+				// _control_allocation[i] = new ControlAllocationPseudoInverse();
 				break;
 
 			default:
 				PX4_ERR("Unknown allocation method");
 				break;
 			}
+			////    END OF CUSTOM MODIFIED CODE    ////
 
 			if (_control_allocation[i] == nullptr) {
 				PX4_ERR("alloc failed");
@@ -219,7 +228,10 @@ ControlAllocator::update_effectiveness_source()
 		switch (source) {
 		case EffectivenessSource::NONE:
 		case EffectivenessSource::MULTIROTOR:
+			////    CUSTOM MODIFIED CODE    ////
 			tmp = new ActuatorEffectivenessTM(this);
+			// tmp = new ActuatorEffectivenessMultirotor(this);
+			////    END OF CUSTOM MODIFIED CODE    ////
 			break;
 
 		case EffectivenessSource::STANDARD_VTOL:
@@ -788,24 +800,10 @@ int ControlAllocator::print_status()
 	PX4_INFO("Running");
 
 	// Print current allocation method
-	switch (_allocation_method_id) {
-	case AllocationMethod::NONE:
-		PX4_INFO("Method: None");
-		break;
 
-	case AllocationMethod::PSEUDO_INVERSE:
-		PX4_INFO("Method: Pseudo-inverse");
-		break;
-
-	case AllocationMethod::SEQUENTIAL_DESATURATION:
-		PX4_INFO("Method: Sequential desaturation");
-		break;
-
-	case AllocationMethod::AUTO:
-		PX4_INFO("Method: Auto");
-		break;
-	}
-
+	////    CUSTOM MODIFIED CODE    ////
+	PX4_INFO("Method [0]: %s", _control_allocation[0]->name());
+	////    END OF CUSTOM MODIFIED CODE    ////
 	// Print current airframe
 	if (_actuator_effectiveness != nullptr) {
 		PX4_INFO("Effectiveness Source: %s", _actuator_effectiveness->name());
@@ -827,8 +825,10 @@ int ControlAllocator::print_status()
 		_control_allocation[i]->getActuatorMax().T().print();
 		PX4_INFO("  Configured actuators: %i", _control_allocation[i]->numConfiguredActuators());
 
+		////    CUSTOM MODIFIED CODE    ////
 		PX4_INFO("  Allocation Matrix =");
 		_control_allocation[i]->_mix.print();
+		////    END OF CUSTOM MODIFIED CODE    ////
 	}
 
 	if (_handled_motor_failure_bitmask) {

@@ -71,6 +71,11 @@
 
 #include <matrix/matrix/math.hpp>
 
+#include <px4_platform_common/module.h>
+#include <px4_platform_common/module_params.h>
+#include <px4_platform_common/px4_work_queue/ScheduledWorkItem.hpp>
+
+
 #include "ActuatorEffectiveness/ActuatorEffectiveness.hpp"
 
 class ControlAllocation
@@ -93,6 +98,9 @@ public:
 		THRUST_Z
 	};
 
+	////    CUSTOM MODIFIED CODE    ////
+	matrix::Matrix<float, NUM_ACTUATORS, NUM_AXES> _mix;
+	////    END OF CUSTOM MODIFIED CODE    ////
 	/**
 	 * Allocate control setpoint to actuators
 	 */
@@ -227,6 +235,11 @@ public:
 	int numConfiguredActuators() const { return _num_actuators; }
 
 	void setNormalizeRPY(bool normalize_rpy) { _normalize_rpy = normalize_rpy; }
+
+
+	////    CUSTOM MODIFIED CODE    ////
+	const char * name() const { return "Control Allocation"; }
+	////    END OF CUSTOM MODIFIED CODE    ////
 
 protected:
 	friend class ControlAllocator; // for _actuator_sp

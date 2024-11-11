@@ -1,56 +1,101 @@
-/****************************************************************************
- *
- *   Copyright (c) 2020-2022 PX4 Development Team. All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in
- *    the documentation and/or other materials provided with the
- *    distribution.
- * 3. Neither the name PX4 nor the names of its contributors may be
- *    used to endorse or promote products derived from this software
- *    without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
- * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
- * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- *
- ****************************************************************************/
+////    CUSTOM CODE    ////
 
 #include "ActuatorEffectivenessTM.hpp"
 
-using namespace matrix;
-
-ActuatorEffectivenessTM::ActuatorEffectivenessTM(ModuleParams *parent)
-	: ModuleParams(parent),
-	  _mc_rotors(this)
-{
-}
-
-bool
-ActuatorEffectivenessTM::getEffectivenessMatrix(Configuration &configuration,
-		EffectivenessUpdateReason external_update)
+bool ActuatorEffectivenessTM::getEffectivenessMatrix(Configuration &configuration, EffectivenessUpdateReason external_update)
 {
 	if (external_update == EffectivenessUpdateReason::NO_EXTERNAL_UPDATE) {
 		return false;
 	}
 
 	// Motors
-	const bool rotors_added_successfully = _mc_rotors.addActuators(configuration);
+	// const bool rotors_added_successfully = _mc_rotors.addActuators(configuration);
 
-	return rotors_added_successfully;
+	// return rotors_added_successfully;
+
+	configuration.num_actuators_matrix[0] = 4;
+	configuration.num_actuators_matrix[1] = 0;
+	configuration.trim[0].zero();
+	configuration.linearization_point[0].zero();
+	configuration.selected_matrix = 0;
+	configuration.num_actuators[0] = 4;
+	configuration.num_actuators[1] = 0;
+
+	for (size_t i = 0; i < NUM_ACTUATORS * MAX_NUM_MATRICES; i++)
+	{
+		configuration.matrix_selection_indexes[i] = 0;
+	}
+
+	// fill in the effectiveness matrix which is 6x16, but columns after 4 are zero
+	float effectiveness_matrix[6][16] = {
+		{ -1.6250,  1.2350,  1.6250, -1.2350, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+		{  0.9750, -0.9750,  0.9750, -0.9750, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+		{  0.3250,  0.3250, -0.3250, -0.3250, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+		{       0,       0,       0,       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+		{       0,       0,       0,       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+		{ -6.5000, -6.5000, -6.5000, -6.5000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	};
+
+
+	for (size_t i = 0; i < NUM_AXES; i++)
+	{
+		for (size_t j = 0; j < NUM_ACTUATORS; j++)
+		{
+			configuration.effectiveness_matrices[0](i, j) = effectiveness_matrix[i][j];
+		}
+	}
+
+	return true;
 }
+
+
+void ActuatorEffectivenessTM::allocate(matrix::Vector<float, NUM_AXES> c, matrix::Vector<float, NUM_ACTUATORS> &actuator_sp)
+{
+	// float mix[16][6] = {
+	// 	{ -0.1748,  0.2564,  0.6643, 0,  0, -0.0385},
+	// 	{  0.1748, -0.2564,  0.8741, 0,  0, -0.0385},
+	// 	{  0.1748,  0.2564, -0.6643, 0,  0, -0.0385},
+	// 	{ -0.1748, -0.2564, -0.8741, 0,  0, -0.0385},
+	// 	{       0,       0,       0, 0,  0,       0},
+	// 	{       0,       0,       0, 0,  0,       0},
+	// 	{       0,       0,       0, 0,  0,       0},
+	// 	{       0,       0,       0, 0,  0,       0},
+	// 	{       0,       0,       0, 0,  0,       0},
+	// 	{       0,       0,       0, 0,  0,       0},
+	// 	{       0,       0,       0, 0,  0,       0},
+	// 	{       0,       0,       0, 0,  0,       0},
+	// 	{       0,       0,       0, 0,  0,       0},
+	// 	{       0,       0,       0, 0,  0,       0},
+	// 	{       0,       0,       0, 0,  0,       0},
+	// 	{       0,       0,       0, 0,  0,       0},
+	// };
+
+	// matrix::Matrix<float, NUM_ACTUATORS, NUM_AXES> _mix;
+
+	// for (size_t i = 0; i < NUM_ACTUATORS; i++)
+	// {
+	// 	for (size_t j = 0; j < NUM_AXES; j++)
+	// 	{
+	// 		_mix(i, j) = mix[i][j];
+	// 	}
+	// }
+
+	// actuator_sp = _mix * c;
+
+	// actuator_sp.print();
+
+	// for (size_t i = 0; i < NUM_ACTUATORS; i++)
+	// {
+	// 	if (c(i) < 0.0f)
+	// 	{
+	// 		actuator_sp(i) = 0.0f;
+	// 	}
+	// 	else if (c(i) > 1.0f)
+	// 	{
+	// 		actuator_sp(i) = 1.0f;
+	// 	}
+	// }
+}
+
+
+////    END OF CUSTOM CODE    ////

@@ -50,8 +50,10 @@
 class ControlAllocationSequentialDesaturation: public ControlAllocationPseudoInverse, public ModuleParams
 {
 public:
-
-	ControlAllocationSequentialDesaturation() : ModuleParams(nullptr) {}
+	////    CUSTOM CODE    ////
+	ControlAllocationSequentialDesaturation() : ModuleParams(nullptr) {PX4_INFO("---------------------- ControlAllocationSequentialDesaturation --------------------------");}
+	const char * name() const { return "SequentialDesaturation"; }
+	////    END OF CUSTOM CODE    ////
 	virtual ~ControlAllocationSequentialDesaturation() = default;
 
 	void allocate() override;

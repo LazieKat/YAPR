@@ -44,10 +44,12 @@ public:
 
 	bool getEffectivenessMatrix(Configuration &configuration, EffectivenessUpdateReason external_update) override;
 
+	////    CUSTOM MODIFIED CODE    ////
 	void getDesiredAllocationMethod(AllocationMethod allocation_method_out[MAX_NUM_MATRICES]) const override
 	{
 		allocation_method_out[0] = AllocationMethod::PSEUDO_INVERSE;
 	}
+	////    END OF CUSTOM MODIFIED CODE    ////
 
 	void getNormalizeRPY(bool normalize[MAX_NUM_MATRICES]) const override
 	{

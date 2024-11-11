@@ -51,6 +51,9 @@ enum class AllocationMethod {
 	PSEUDO_INVERSE = 0,
 	SEQUENTIAL_DESATURATION = 1,
 	AUTO = 2,
+	////    CUSTOM CODE    ////
+	TM = 3,
+	////    END CUSTOM CODE    ////
 };
 
 enum class ActuatorType {
@@ -219,6 +222,10 @@ public:
 	 */
 	virtual void stopMaskedMotorsWithZeroThrust(uint32_t stoppable_motors_mask, ActuatorVector &actuator_sp);
 
+
+	////    CUSTOM CODE    ////
+	virtual void allocate(matrix::Vector<float, NUM_AXES> c, matrix::Vector<float, NUM_ACTUATORS> &actuator_sp) {};
+	////    END OF CUSTOM CODE    ////
 protected:
 	FlightPhase _flight_phase{FlightPhase::HOVER_FLIGHT};
 	uint32_t _stopped_motors_mask{0};
