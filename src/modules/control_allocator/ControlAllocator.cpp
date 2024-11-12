@@ -411,6 +411,11 @@ ControlAllocator::Run()
 		}
 	}
 
+	////    CUSTOM MODIFIED CODE    ////
+	bool mine = true;
+	ActuatorEffectiveness::ActuatorVector actuator_sp;
+	////    END OF CUSTOM MODIFIED CODE    ////
+
 	if (do_update) {
 		_last_run = now;
 
@@ -441,19 +446,31 @@ ControlAllocator::Run()
 			}
 		}
 
+		////    CUSTOM MODIFIED CODE    ////
 		for (int i = 0; i < _num_control_allocation; ++i) {
-
-			_control_allocation[i]->setControlSetpoint(c[i]);
-
-			// Do allocation
-			_control_allocation[i]->allocate();
-
-			_control_allocation[i]->clipActuatorSetpoint();
+			if(mine)
+			{
+				_actuator_effectiveness->allocate(c[i], actuator_sp);
+			}
+			else
+			{
+				_control_allocation[i]->setControlSetpoint(c[i]);
+				_control_allocation[i]->allocate();
+				_control_allocation[i]->clipActuatorSetpoint();
+			}
 		}
+		////    END OF CUSTOM MODIFIED CODE    ////
 	}
 
-	// Publish actuator setpoint and allocator status
-	publish_actuator_controls();
+	////    CUSTOM MODIFIED CODE    ////
+	if(mine)
+	{
+		publish_actuator_controls(actuator_sp);
+	}
+	else
+	{
+		publish_actuator_controls();
+	}
 
 	// Publish status at limited rate, as it's somewhat expensive and we use it for slower dynamics
 	// (i.e. anti-integrator windup)
@@ -466,6 +483,7 @@ ControlAllocator::Run()
 
 		_last_status_pub = now;
 	}
+	////    END OF CUSTOM MODIFIED CODE    ////
 
 	perf_end(_loop_perf);
 }
@@ -654,6 +672,36 @@ ControlAllocator::publish_control_allocator_status(int matrix_index)
 
 	_control_allocator_status_pub[matrix_index].publish(control_allocator_status);
 }
+
+////    CUSTOM CODE    ////
+void
+ControlAllocator::publish_actuator_controls(ActuatorEffectiveness::ActuatorVector _actuator_sp)
+{
+	if (!_publish_controls) {
+		return;
+	}
+
+	actuator_motors_s actuator_motors;
+	actuator_motors.timestamp = hrt_absolute_time();
+	actuator_motors.timestamp_sample = _timestamp_sample;
+
+	actuator_motors.reversible_flags = _param_r_rev.get();
+
+	// motors
+	int motors_idx;
+
+	for (motors_idx = 0; motors_idx < 4; motors_idx++) {
+		float actuator_sp = _actuator_sp(motors_idx);
+		actuator_motors.control[motors_idx] = PX4_ISFINITE(actuator_sp) ? actuator_sp : NAN;
+	}
+
+	for (int i = motors_idx; i < actuator_motors_s::NUM_CONTROLS; i++) {
+		actuator_motors.control[i] = NAN;
+	}
+
+	_actuator_motors_pub.publish(actuator_motors);
+}
+////    END OF CUSTOM CODE    ////
 
 void
 ControlAllocator::publish_actuator_controls()

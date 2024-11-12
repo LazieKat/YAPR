@@ -140,9 +140,9 @@ private:
 
 	void publish_control_allocator_status(int matrix_index);
 
-	////    CUSTOM CODE    ////
 	void publish_actuator_controls();
-	// void publish_actuator_controls(matrix::Vector<float, NUM_ACTUATORS> _actuator_sp);
+	////    CUSTOM CODE    ////
+	void publish_actuator_controls(matrix::Vector<float, NUM_ACTUATORS> _actuator_sp);
 	////    END CUSTOM CODE    ////
 
 	AllocationMethod _allocation_method_id{AllocationMethod::NONE};

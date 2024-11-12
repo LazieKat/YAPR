@@ -51,50 +51,48 @@ bool ActuatorEffectivenessTM::getEffectivenessMatrix(Configuration &configuratio
 
 void ActuatorEffectivenessTM::allocate(matrix::Vector<float, NUM_AXES> c, matrix::Vector<float, NUM_ACTUATORS> &actuator_sp)
 {
-	// float mix[16][6] = {
-	// 	{ -0.1748,  0.2564,  0.6643, 0,  0, -0.0385},
-	// 	{  0.1748, -0.2564,  0.8741, 0,  0, -0.0385},
-	// 	{  0.1748,  0.2564, -0.6643, 0,  0, -0.0385},
-	// 	{ -0.1748, -0.2564, -0.8741, 0,  0, -0.0385},
-	// 	{       0,       0,       0, 0,  0,       0},
-	// 	{       0,       0,       0, 0,  0,       0},
-	// 	{       0,       0,       0, 0,  0,       0},
-	// 	{       0,       0,       0, 0,  0,       0},
-	// 	{       0,       0,       0, 0,  0,       0},
-	// 	{       0,       0,       0, 0,  0,       0},
-	// 	{       0,       0,       0, 0,  0,       0},
-	// 	{       0,       0,       0, 0,  0,       0},
-	// 	{       0,       0,       0, 0,  0,       0},
-	// 	{       0,       0,       0, 0,  0,       0},
-	// 	{       0,       0,       0, 0,  0,       0},
-	// 	{       0,       0,       0, 0,  0,       0},
-	// };
+	float mix[16][6] = {
+		{-0.4821,  0.7071,  0.7600, 0, 0, -1.0000},
+		{ 0.4821, -0.7071,  1.0000, 0, 0, -1.0000},
+		{ 0.4821,  0.7071, -0.7600, 0, 0, -1.0000},
+		{-0.4821, -0.7071, -1.0000, 0, 0, -1.0000},
+		{      0,       0,       0, 0, 0,       0},
+		{      0,       0,       0, 0, 0,       0},
+		{      0,       0,       0, 0, 0,       0},
+		{      0,       0,       0, 0, 0,       0},
+		{      0,       0,       0, 0, 0,       0},
+		{      0,       0,       0, 0, 0,       0},
+		{      0,       0,       0, 0, 0,       0},
+		{      0,       0,       0, 0, 0,       0},
+		{      0,       0,       0, 0, 0,       0},
+		{      0,       0,       0, 0, 0,       0},
+		{      0,       0,       0, 0, 0,       0},
+		{      0,       0,       0, 0, 0,       0},
+	};
 
-	// matrix::Matrix<float, NUM_ACTUATORS, NUM_AXES> _mix;
+	matrix::Matrix<float, NUM_ACTUATORS, NUM_AXES> _mix;
 
-	// for (size_t i = 0; i < NUM_ACTUATORS; i++)
-	// {
-	// 	for (size_t j = 0; j < NUM_AXES; j++)
-	// 	{
-	// 		_mix(i, j) = mix[i][j];
-	// 	}
-	// }
+	for (size_t i = 0; i < NUM_ACTUATORS; i++)
+	{
+		for (size_t j = 0; j < NUM_AXES; j++)
+		{
+			_mix(i, j) = mix[i][j];
+		}
+	}
 
-	// actuator_sp = _mix * c;
+	actuator_sp = _mix * c;
 
-	// actuator_sp.print();
-
-	// for (size_t i = 0; i < NUM_ACTUATORS; i++)
-	// {
-	// 	if (c(i) < 0.0f)
-	// 	{
-	// 		actuator_sp(i) = 0.0f;
-	// 	}
-	// 	else if (c(i) > 1.0f)
-	// 	{
-	// 		actuator_sp(i) = 1.0f;
-	// 	}
-	// }
+	for (size_t i = 0; i < NUM_ACTUATORS; i++)
+	{
+		if (actuator_sp(i) < 0.0f)
+		{
+			actuator_sp(i) = 0.0f;
+		}
+		else if (actuator_sp(i) > 1.0f)
+		{
+			actuator_sp(i) = 1.0f;
+		}
+	}
 }
 
 
