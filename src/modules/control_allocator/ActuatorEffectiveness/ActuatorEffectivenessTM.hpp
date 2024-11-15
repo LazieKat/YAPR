@@ -4,7 +4,6 @@
 
 #include "ActuatorEffectiveness.hpp"
 #include "ActuatorEffectivenessRotors.hpp"
-#include <algorithm>
 
 class ActuatorEffectivenessTM : public ModuleParams, public ActuatorEffectiveness
 {
