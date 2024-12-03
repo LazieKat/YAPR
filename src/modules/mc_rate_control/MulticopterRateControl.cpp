@@ -147,7 +147,6 @@ MulticopterRateControl::Run()
 		_vehicle_status_sub.update(&_vehicle_status);
 
 
-//////////////////// HEREEEEE ////////////////////
 		// use rates setpoint topic
 		vehicle_rates_setpoint_s vehicle_rates_setpoint{};
 
@@ -259,6 +258,7 @@ MulticopterRateControl::Run()
 			vehicle_torque_setpoint.timestamp = hrt_absolute_time();
 			_vehicle_torque_setpoint_pub.publish(vehicle_torque_setpoint);
 
+//////////////////// HEREEEEE ////////////////////
 			updateActuatorControlsStatus(vehicle_torque_setpoint, dt);
 
 		}
