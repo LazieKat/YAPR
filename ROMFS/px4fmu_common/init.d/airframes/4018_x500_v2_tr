@@ -1,0 +1,131 @@
+#!/bin/sh
+#
+# @name Tiltrotor X500 V2
+#
+# @type Tiltrotor Quadrotor x
+# @class Copter
+#
+# @maintainer Ahmad Ziad Zain Aldeen <ahmad.zain@torontomu.ca>
+#
+# @board px4_fmu-v2 exclude
+# @board bitcraze_crazyflie exclude
+#
+
+. ${R}etc/init.d/rc.mc_defaults
+
+param set-default IMU_GYRO_CUTOFF 30
+
+param set-default MC_ROLLRATE_P 0.14
+param set-default MC_PITCHRATE_P 0.14
+param set-default MC_ROLLRATE_I 0.3
+param set-default MC_PITCHRATE_I 0.3
+param set-default MC_ROLLRATE_D 0.004
+param set-default MC_PITCHRATE_D 0.004
+
+param set-default PWM_MAIN_FUNC1 101
+param set-default PWM_MAIN_FUNC2 102
+param set-default PWM_MAIN_FUNC3 103
+param set-default PWM_MAIN_FUNC4 104
+
+# Square quadrotor X PX4 numbering
+param set-default CA_ROTOR_COUNT 4
+
+param set-default  CA_ROTOR0_PX   1.0
+param set-default  CA_ROTOR0_PY   1.0
+param set-default  CA_ROTOR0_PZ   0.0
+param set-default  CA_ROTOR0_AX   0.0
+param set-default  CA_ROTOR0_AY   0.0
+param set-default  CA_ROTOR0_AZ  -1.0
+param set-default  CA_ROTOR0_CT   6.50
+param set-default  CA_ROTOR0_KM   0.05
+
+param set-default  CA_ROTOR1_PX  -1.0
+param set-default  CA_ROTOR1_PY  -1.0
+param set-default  CA_ROTOR1_PZ   0.0
+param set-default  CA_ROTOR1_AX   0.0
+param set-default  CA_ROTOR1_AY   0.0
+param set-default  CA_ROTOR1_AZ  -1.0
+param set-default  CA_ROTOR1_CT   6.50
+param set-default  CA_ROTOR1_KM   0.05
+
+param set-default  CA_ROTOR2_PX   1.0
+param set-default  CA_ROTOR2_PY  -1.0
+param set-default  CA_ROTOR2_PZ   0.0
+param set-default  CA_ROTOR2_AX   0.0
+param set-default  CA_ROTOR2_AY   0.0
+param set-default  CA_ROTOR2_AZ  -1.0
+param set-default  CA_ROTOR2_CT   6.50
+param set-default  CA_ROTOR2_KM  -0.05
+
+param set-default  CA_ROTOR3_PX  -1.0
+param set-default  CA_ROTOR3_PY   1.0
+param set-default  CA_ROTOR3_PZ   0.0
+param set-default  CA_ROTOR3_AX   0.0
+param set-default  CA_ROTOR3_AY   0.0
+param set-default  CA_ROTOR3_AZ  -1.0
+param set-default  CA_ROTOR3_CT   6.50
+param set-default  CA_ROTOR3_KM  -0.05
+
+
+
+########### tiltrotor specific parameters ###########
+
+
+param set-default CA_AIRFRAME 13
+param set-default CA_SV_TL_COUNT 4
+
+param set-default CA_SV_TL0_MAXA  60.0000
+param set-default CA_SV_TL0_MINA -60.0000
+param set-default CA_SV_TL1_MAXA  60.0000
+param set-default CA_SV_TL1_MINA -60.0000
+param set-default CA_SV_TL2_MAXA  60.0000
+param set-default CA_SV_TL2_MINA -60.0000
+param set-default CA_SV_TL3_MAXA  60.0000
+param set-default CA_SV_TL3_MINA -60.0000
+
+param set-default CA_SV_TL0_MAXM  35.0000
+param set-default CA_SV_TL0_MINM -35.0000
+param set-default CA_SV_TL1_MAXM  35.0000
+param set-default CA_SV_TL1_MINM -35.0000
+param set-default CA_SV_TL2_MAXM  35.0000
+param set-default CA_SV_TL2_MINM -35.0000
+param set-default CA_SV_TL3_MAXM  35.0000
+param set-default CA_SV_TL3_MINM -35.0000
+
+param set-default PWM_AUX_FUNC1 201
+param set-default PWM_AUX_FUNC2 202
+param set-default PWM_AUX_FUNC3 203
+param set-default PWM_AUX_FUNC4 204
+param set-default PWM_AUX_TIM0 50
+
+param set-default PWM_AUX_DIS1 1500
+param set-default PWM_AUX_DIS2 1500
+param set-default PWM_AUX_DIS3 1500
+param set-default PWM_AUX_DIS4 1500
+
+param set-default PWM_AUX_MAX1 2100
+param set-default PWM_AUX_MAX2 2100
+param set-default PWM_AUX_MAX3 2100
+param set-default PWM_AUX_MAX4 2100
+
+param set-default PWM_AUX_MIN1 900
+param set-default PWM_AUX_MIN2 900
+param set-default PWM_AUX_MIN3 900
+param set-default PWM_AUX_MIN4 900
+
+param set-default PWM_AUX_REV 15
+
+
+# optical flow setup
+param set-default EKF2_OF_CTRL     1
+param set-default EKF2_GPS_CTRL    0
+param set-default UAVCAN_SUB_FLOW  1
+param set-default UAVCAN_SUB_RNG   1
+param set-default EKF2_RNG_A_HMAX  10.0000
+param set-default EKF2_RNG_QLTY_T   0.2000
+param set-default UAVCAN_RNG_MIN    0.0800
+param set-default UAVCAN_RNG_MAX   30.0000
+param set-default SENS_FLOW_MINHGT  0.0800
+param set-default SENS_FLOW_MAXHGT 25.0000
+param set-default SENS_FLOW_MAXR    7.4000
+param set-default EKF2_OF_POS_X     0.1000

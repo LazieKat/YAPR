@@ -30,7 +30,7 @@ parameters:
                 10: Helicopter (tail ESC)
                 11: Helicopter (tail Servo)
                 12: Helicopter (Coaxial)
-                13: Rover (Mecanum)
+                13: TM
             default: 0
 
         CA_METHOD:
@@ -411,6 +411,41 @@ parameters:
             num_instances: *max_num_tilts
             instance_start: 0
             default: 0
+
+        ### CUSTOM CODE ###
+        CA_SV_TL${i}_MINM:
+            description:
+                short: Tilt Servo ${i} Tilt Mechanical Minimum Limit
+                long: |
+                  Defines the tilt angle when the servo is at the mechanical minimum.
+                  This is different from intrinsic limit, mechanical limit is due to
+                  arm or linkage design. This equals the intrinsic minimum if there
+                  is no mechanical restrictoin.
+            type: float
+            decimal: 0
+            unit: 'deg'
+            num_instances: *max_num_tilts
+            instance_start: 0
+            min: -90.0
+            max: 90.0
+            default: 0.0
+        CA_SV_TL${i}_MAXM:
+            description:
+                short: Tilt Servo ${i} Tilt Mechanical Maximum Limit
+                long: |
+                  Defines the tilt angle when the servo is at the mechanical maximum.
+                  This is different from intrinsic limit, mechanical limit is due to
+                  arm or linkage design. This equals the intrinsic maximum if there
+                  is no mechanical restrictoin.
+            type: float
+            decimal: 0
+            unit: 'deg'
+            num_instances: *max_num_tilts
+            instance_start: 0
+            min: -90.0
+            max: 90.0
+            default: 90.0
+        ### END CUSTOM CODE ###
 
         # helicopter
         CA_SP0_COUNT:
@@ -1142,16 +1177,44 @@ mixer:
                       - label: 'Throttle spoolup time'
                         name: COM_SPOOLUP_TIME
 
-            13: # Rover (Mecanum)
-                title: 'Rover (Mecanum)'
+           ### CUSTOM CODE ###
+            13: # TM
+                title: 'TM'
                 actuators:
                   - actuator_type: 'motor'
-                    instances:
-                      - name: 'Right Motor Front'
-                        position: [ 1, 1, 0 ]
-                      - name: 'Left Motor Front'
-                        position: [ 1, -1, 0 ]
-                      - name: 'Right Motor Back'
-                        position: [ -1, 1, 0 ]
-                      - name: 'Left Motor Back'
-                        position: [ -1, -1, 0 ]
+                    count: 'CA_ROTOR_COUNT'
+                    per_item_parameters:
+                        standard:
+                            position: [ 'CA_ROTOR${i}_PX', 'CA_ROTOR${i}_PY', 'CA_ROTOR${i}_PZ' ]
+                        extra:
+                          - name: 'CA_ROTOR${i}_KM'
+                            label: 'Direction CCW'
+                            function: 'spin-dir'
+                            show_as: 'true-if-positive'
+                          - name: 'CA_ROTOR${i}_AX'
+                            label: 'Axis X'
+                            function: 'axisx'
+                            advanced: true
+                          - name: 'CA_ROTOR${i}_AY'
+                            label: 'Axis Y'
+                            function: 'axisy'
+                            advanced: true
+                          - name: 'CA_ROTOR${i}_AZ'
+                            label: 'Axis Z'
+                            function: 'axisz'
+                            advanced: true
+                  - actuator_type: 'servo'
+                    group_label: 'Tilt Servos'
+                    count: 'CA_SV_TL_COUNT'
+                    item_label_prefix: 'Tilt ${i}'
+                    per_item_parameters:
+                        extra:
+                          - name: 'CA_SV_TL${i}_MINA'
+                            label: "Servo\nMin Tilt"
+                          - name: 'CA_SV_TL${i}_MAXA'
+                            label: "Servo\nMax Tilt"
+                          - name: 'CA_SV_TL${i}_MINM'
+                            label: "Mechanical\nMin Tilt"
+                          - name: 'CA_SV_TL${i}_MAXM'
+                            label: "Mechanical\nMax Tilt"
+            ### END CUSTOM CODE ###
