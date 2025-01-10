@@ -1,0 +1,5 @@
+menuconfig MODULES_AASERVO
+	bool "aaservo"
+	default n
+	---help---
+		Enable support for aaservo
