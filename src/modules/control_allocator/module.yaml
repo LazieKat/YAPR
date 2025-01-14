@@ -445,6 +445,20 @@ parameters:
             min: -90.0
             max: 90.0
             default: 90.0
+        CA_SV_TL${i}_TRM:
+            description:
+                short: Tilt Servo ${i} Trim
+                long: |
+                  This is the trim angle in degrees needed to make the rotor pointing
+                  upwards when the servo is zeroed. This must be as small as possible.
+            type: float
+            decimal: 1
+            unit: 'deg'
+            num_instances: *max_num_tilts
+            instance_start: 0
+            min: -10.0
+            max: 10.0
+            default: 0.0
         ### END CUSTOM CODE ###
 
         # helicopter
@@ -1217,4 +1231,6 @@ mixer:
                             label: "Mechanical\nMin Tilt"
                           - name: 'CA_SV_TL${i}_MAXM'
                             label: "Mechanical\nMax Tilt"
+                          - name: 'CA_SV_TL${i}_TRM'
+                            label: "Servo Vertical\nTrim"
             ### END CUSTOM CODE ###
