@@ -42,42 +42,6 @@ ControlAllocationTM::updatePseudoInverse()
 		}
 	}
 
-	// if (_mix_update_needed) {
-	// 	float mix[16][6] = {
-	// 		{ -0.1748,  0.2564,  0.6643, 0,  0, -0.0385},
-	// 		{  0.1748, -0.2564,  0.8741, 0,  0, -0.0385},
-	// 		{  0.1748,  0.2564, -0.6643, 0,  0, -0.0385},
-	// 		{ -0.1748, -0.2564, -0.8741, 0,  0, -0.0385},
-	// 		{       0,       0,       0, 0,  0,       0},
-	// 		{       0,       0,       0, 0,  0,       0},
-	// 		{       0,       0,       0, 0,  0,       0},
-	// 		{       0,       0,       0, 0,  0,       0},
-	// 		{       0,       0,       0, 0,  0,       0},
-	// 		{       0,       0,       0, 0,  0,       0},
-	// 		{       0,       0,       0, 0,  0,       0},
-	// 		{       0,       0,       0, 0,  0,       0},
-	// 		{       0,       0,       0, 0,  0,       0},
-	// 		{       0,       0,       0, 0,  0,       0},
-	// 		{       0,       0,       0, 0,  0,       0},
-	// 		{       0,       0,       0, 0,  0,       0},
-	// 	};
-
-	// 	for (size_t i = 0; i < NUM_ACTUATORS; i++) {
-	// 		for (size_t j = 0; j < NUM_AXES; j++) {
-	// 			_mix(i, j) = mix[i][j];
-	// 		}
-	// 	}
-
-	// 	// matrix::geninv(_effectiveness, _mix);
-
-	// 	if (_normalization_needs_update && !_had_actuator_failure) {
-	// 		updateControlAllocationMatrixScale();
-	// 		_normalization_needs_update = false;
-	// 	}
-
-	// 	normalizeControlAllocationMatrix();
-	// 	_mix_update_needed = false;
-	// }
 }
 
 void

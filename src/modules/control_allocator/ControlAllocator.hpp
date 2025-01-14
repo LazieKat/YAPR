@@ -142,7 +142,7 @@ private:
 
 	void publish_actuator_controls();
 	////    CUSTOM CODE    ////
-	void publish_actuator_controls(matrix::Vector<float, NUM_ACTUATORS> _actuator_sp);
+	void publish_actuator_controls(matrix::Vector<float, NUM_ACTUATORS> _actuator_sp, matrix::Vector<float, NUM_ACTUATORS> _servo_sp);
 	////    END CUSTOM CODE    ////
 
 	AllocationMethod _allocation_method_id{AllocationMethod::NONE};

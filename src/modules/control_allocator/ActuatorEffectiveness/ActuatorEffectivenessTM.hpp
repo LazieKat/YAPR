@@ -8,7 +8,8 @@
 class ActuatorEffectivenessTM : public ModuleParams, public ActuatorEffectiveness
 {
 public:
-	ActuatorEffectivenessTM(ModuleParams *parent) : ModuleParams(parent) {};
+	ActuatorEffectivenessTM(ModuleParams *parent) ;
+
 	virtual ~ActuatorEffectivenessTM() = default;
 
 	bool getEffectivenessMatrix(Configuration &configuration, EffectivenessUpdateReason external_update) override;
@@ -25,9 +26,21 @@ public:
 
 	const char *name() const override { return "TM"; }
 
-	void allocate(matrix::Vector<float, NUM_AXES> c, matrix::Vector<float, NUM_ACTUATORS> &actuator_sp);
+	void allocate(matrix::Vector<float, NUM_AXES> c, ActuatorEffectiveness::ActuatorVector &actuator_sp, ActuatorEffectiveness::ActuatorVector &servo_sp);
 
 	matrix::Vector<float, NUM_ACTUATORS> _actuator_sp;
+
+	float deg2pwm(float deg, int servo_num);
+
+	void getParam(const char * name, float * value);
+
+	static const uint8_t SERVO_COUNT = 4;
+
+	float min[SERVO_COUNT],
+              max[SERVO_COUNT],
+	      mec_min[SERVO_COUNT],
+	      mec_max[SERVO_COUNT],
+	      trim[SERVO_COUNT];
 };
 
 

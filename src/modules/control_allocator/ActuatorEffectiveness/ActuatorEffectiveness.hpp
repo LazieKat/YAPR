@@ -224,7 +224,7 @@ public:
 
 
 	////    CUSTOM CODE    ////
-	virtual void allocate(matrix::Vector<float, NUM_AXES> c, matrix::Vector<float, NUM_ACTUATORS> &actuator_sp) {};
+	virtual void allocate(matrix::Vector<float, NUM_AXES> c, matrix::Vector<float, NUM_ACTUATORS> &actuator_sp, matrix::Vector<float, NUM_ACTUATORS> &servo_sp) {};
 	////    END OF CUSTOM CODE    ////
 protected:
 	FlightPhase _flight_phase{FlightPhase::HOVER_FLIGHT};

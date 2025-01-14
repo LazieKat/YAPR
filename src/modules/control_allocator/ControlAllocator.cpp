@@ -225,10 +225,7 @@ ControlAllocator::update_effectiveness_source()
 		switch (source) {
 		case EffectivenessSource::NONE:
 		case EffectivenessSource::MULTIROTOR:
-			////    CUSTOM MODIFIED CODE    ////
-			tmp = new ActuatorEffectivenessTM(this);
-			// tmp = new ActuatorEffectivenessMultirotor(this);
-			////    END OF CUSTOM MODIFIED CODE    ////
+			tmp = new ActuatorEffectivenessMultirotor(this);
 			break;
 
 		case EffectivenessSource::STANDARD_VTOL:
@@ -278,9 +275,11 @@ ControlAllocator::update_effectiveness_source()
 		case EffectivenessSource::HELICOPTER_COAXIAL:
 			tmp = new ActuatorEffectivenessHelicopterCoaxial(this);
 			break;
+		// CUSTOM CODE //
 		case EffectivenessSource::TM:
 			tmp = new ActuatorEffectivenessTM(this);
 			break;
+		// CUSTOM CODE //
 
 		default:
 			PX4_ERR("Unknown airframe");
@@ -414,6 +413,7 @@ ControlAllocator::Run()
 	////    CUSTOM MODIFIED CODE    ////
 	bool mine = true;
 	ActuatorEffectiveness::ActuatorVector actuator_sp;
+	ActuatorEffectiveness::ActuatorVector servo_sp;
 	////    END OF CUSTOM MODIFIED CODE    ////
 
 	if (do_update) {
@@ -450,7 +450,7 @@ ControlAllocator::Run()
 		for (int i = 0; i < _num_control_allocation; ++i) {
 			if(mine)
 			{
-				_actuator_effectiveness->allocate(c[i], actuator_sp);
+				_actuator_effectiveness->allocate(c[i], actuator_sp, servo_sp);
 			}
 			else
 			{
@@ -465,7 +465,7 @@ ControlAllocator::Run()
 	////    CUSTOM MODIFIED CODE    ////
 	if(mine)
 	{
-		publish_actuator_controls(actuator_sp);
+		publish_actuator_controls(actuator_sp, servo_sp);
 	}
 	else
 	{
@@ -675,7 +675,7 @@ ControlAllocator::publish_control_allocator_status(int matrix_index)
 
 ////    CUSTOM CODE    ////
 void
-ControlAllocator::publish_actuator_controls(ActuatorEffectiveness::ActuatorVector _actuator_sp)
+ControlAllocator::publish_actuator_controls(ActuatorEffectiveness::ActuatorVector _actuator_sp, ActuatorEffectiveness::ActuatorVector _servo_sp)
 {
 	if (!_publish_controls) {
 		return;
@@ -684,6 +684,10 @@ ControlAllocator::publish_actuator_controls(ActuatorEffectiveness::ActuatorVecto
 	actuator_motors_s actuator_motors;
 	actuator_motors.timestamp = hrt_absolute_time();
 	actuator_motors.timestamp_sample = _timestamp_sample;
+
+	actuator_servos_s servo{};
+	servo.timestamp_sample = _timestamp_sample;
+	servo.timestamp = actuator_motors.timestamp;
 
 	actuator_motors.reversible_flags = _param_r_rev.get();
 
@@ -699,7 +703,21 @@ ControlAllocator::publish_actuator_controls(ActuatorEffectiveness::ActuatorVecto
 		actuator_motors.control[i] = NAN;
 	}
 
+
+	// servos
+	int servos_idx;
+	for (servos_idx = 0; servos_idx < 4; servos_idx++) {
+		float actuator_sp = _servo_sp(servos_idx);
+		servo.control[servos_idx] = PX4_ISFINITE(actuator_sp) ? actuator_sp : NAN;
+	}
+
+	for (int i = servos_idx; i < actuator_servos_s::NUM_CONTROLS; i++) {
+		servo.control[i] = NAN;
+	}
+
+
 	_actuator_motors_pub.publish(actuator_motors);
+	_actuator_servos_pub.publish(servo);
 }
 ////    END OF CUSTOM CODE    ////
 
