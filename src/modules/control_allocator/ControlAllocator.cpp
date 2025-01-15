@@ -451,6 +451,9 @@ ControlAllocator::Run()
 			if(mine)
 			{
 				_actuator_effectiveness->allocate(c[i], actuator_sp, servo_sp);
+				PX4_INFO("Goal: %.6f   %.6f   %.6f   %.6f   %.6f   %.6f", (double)c[0](0), (double)c[0](1), (double)c[0](2), (double)c[0](3), (double)c[0](4), (double)c[0](5));
+				PX4_INFO("      %.6f   %.6f   %.6f   %.6f   %.6f   %.6f", (double)actuator_sp(0), (double)actuator_sp(1), (double)actuator_sp(2), (double)actuator_sp(3), (double)actuator_sp(4), (double)actuator_sp(5));
+				PX4_INFO("      %.6f   %.6f   %.6f   %.6f   %.6f   %.6f", (double)servo_sp(0), (double)servo_sp(1), (double)servo_sp(2), (double)servo_sp(3), (double)servo_sp(4), (double)servo_sp(5));
 			}
 			else
 			{
