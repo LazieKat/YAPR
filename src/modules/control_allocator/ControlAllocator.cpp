@@ -482,6 +482,9 @@ ControlAllocator::Run()
 		// ////    END OF CUSTOM MODIFIED CODE    ////
 	}
 
+	// Publish actuator setpoint and allocator status
+	publish_actuator_controls();
+
 	// ////    CUSTOM MODIFIED CODE    ////
 	// if(mine)
 	// {
