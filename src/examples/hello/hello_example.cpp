@@ -55,7 +55,7 @@ int HelloExample::main()
 	while (!appState.exitRequested() && i < 5) {
 		px4_sleep(2);
 
-		printf("  uwu... i'd doing work...\n");
+		printf("  Doing work...\n");
 		++i;
 	}
 

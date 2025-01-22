@@ -48,10 +48,10 @@ int PX4_MAIN(int argc, char **argv)
 {
 	px4::init(argc, argv, "hello");
 
-	printf("hewwo\n");
+	printf("hello\n");
 	HelloExample hello;
 	hello.main();
 
-	printf("dont weave me :( \n");
+	printf("goodbye\n");
 	return 0;
 }
