@@ -410,11 +410,11 @@ ControlAllocator::Run()
 		}
 	}
 
-	////    CUSTOM MODIFIED CODE    ////
-	bool mine = true;
-	ActuatorEffectiveness::ActuatorVector actuator_sp;
-	ActuatorEffectiveness::ActuatorVector servo_sp;
-	////    END OF CUSTOM MODIFIED CODE    ////
+	// ////    CUSTOM MODIFIED CODE    ////
+	// bool mine = true;
+	// ActuatorEffectiveness::ActuatorVector actuator_sp;
+	// ActuatorEffectiveness::ActuatorVector servo_sp;
+	// ////    END OF CUSTOM MODIFIED CODE    ////
 
 	if (do_update) {
 		_last_run = now;
@@ -446,34 +446,52 @@ ControlAllocator::Run()
 			}
 		}
 
-		////    CUSTOM MODIFIED CODE    ////
 		for (int i = 0; i < _num_control_allocation; ++i) {
-			if(mine)
-			{
-				_actuator_effectiveness->allocate(c[i], actuator_sp, servo_sp);
-				PX4_INFO("Goal: %.6f   %.6f   %.6f   %.6f   %.6f   %.6f", (double)c[0](0), (double)c[0](1), (double)c[0](2), (double)c[0](3), (double)c[0](4), (double)c[0](5));
-				PX4_INFO("      %.6f   %.6f   %.6f   %.6f   %.6f   %.6f", (double)actuator_sp(0), (double)actuator_sp(1), (double)actuator_sp(2), (double)actuator_sp(3), (double)actuator_sp(4), (double)actuator_sp(5));
-				PX4_INFO("      %.6f   %.6f   %.6f   %.6f   %.6f   %.6f", (double)servo_sp(0), (double)servo_sp(1), (double)servo_sp(2), (double)servo_sp(3), (double)servo_sp(4), (double)servo_sp(5));
+
+			_control_allocation[i]->setControlSetpoint(c[i]);
+
+			// Do allocation
+			_control_allocation[i]->allocate();
+			_actuator_effectiveness->allocateAuxilaryControls(dt, i, _control_allocation[i]->_actuator_sp); //flaps and spoilers
+			_actuator_effectiveness->updateSetpoint(c[i], i, _control_allocation[i]->_actuator_sp,
+								_control_allocation[i]->getActuatorMin(), _control_allocation[i]->getActuatorMax());
+
+			if (_has_slew_rate) {
+				_control_allocation[i]->applySlewRateLimit(dt);
 			}
-			else
-			{
-				_control_allocation[i]->setControlSetpoint(c[i]);
-				_control_allocation[i]->allocate();
-				_control_allocation[i]->clipActuatorSetpoint();
-			}
+
+			_control_allocation[i]->clipActuatorSetpoint();
 		}
-		////    END OF CUSTOM MODIFIED CODE    ////
+
+		// ////    CUSTOM MODIFIED CODE    ////
+		// for (int i = 0; i < _num_control_allocation; ++i) {
+		// 	if(mine)
+		// 	{
+		// 		_actuator_effectiveness->allocate(c[i], actuator_sp, servo_sp);
+		// 		PX4_INFO("Goal: %.6f   %.6f   %.6f   %.6f   %.6f   %.6f", (double)c[0](0), (double)c[0](1), (double)c[0](2), (double)c[0](3), (double)c[0](4), (double)c[0](5));
+		// 		PX4_INFO("      %.6f   %.6f   %.6f   %.6f   %.6f   %.6f", (double)actuator_sp(0), (double)actuator_sp(1), (double)actuator_sp(2), (double)actuator_sp(3), (double)actuator_sp(4), (double)actuator_sp(5));
+		// 		PX4_INFO("      %.6f   %.6f   %.6f   %.6f   %.6f   %.6f", (double)servo_sp(0), (double)servo_sp(1), (double)servo_sp(2), (double)servo_sp(3), (double)servo_sp(4), (double)servo_sp(5));
+		// 	}
+		// 	else
+		// 	{
+		// 		_control_allocation[i]->setControlSetpoint(c[i]);
+		// 		_control_allocation[i]->allocate();
+		// 		_control_allocation[i]->clipActuatorSetpoint();
+		// 	}
+		// }
+		// ////    END OF CUSTOM MODIFIED CODE    ////
 	}
 
-	////    CUSTOM MODIFIED CODE    ////
-	if(mine)
-	{
-		publish_actuator_controls(actuator_sp, servo_sp);
-	}
-	else
-	{
-		publish_actuator_controls();
-	}
+	// ////    CUSTOM MODIFIED CODE    ////
+	// if(mine)
+	// {
+	// 	publish_actuator_controls(actuator_sp, servo_sp);
+	// }
+	// else
+	// {
+	// 	publish_actuator_controls();
+	// }
+	// ////    END OF CUSTOM MODIFIED CODE    ////
 
 	// Publish status at limited rate, as it's somewhat expensive and we use it for slower dynamics
 	// (i.e. anti-integrator windup)
@@ -486,7 +504,6 @@ ControlAllocator::Run()
 
 		_last_status_pub = now;
 	}
-	////    END OF CUSTOM MODIFIED CODE    ////
 
 	perf_end(_loop_perf);
 }
@@ -676,53 +693,53 @@ ControlAllocator::publish_control_allocator_status(int matrix_index)
 	_control_allocator_status_pub[matrix_index].publish(control_allocator_status);
 }
 
-////    CUSTOM CODE    ////
-void
-ControlAllocator::publish_actuator_controls(ActuatorEffectiveness::ActuatorVector _actuator_sp, ActuatorEffectiveness::ActuatorVector _servo_sp)
-{
-	if (!_publish_controls) {
-		return;
-	}
-
-	actuator_motors_s actuator_motors;
-	actuator_motors.timestamp = hrt_absolute_time();
-	actuator_motors.timestamp_sample = _timestamp_sample;
-
-	actuator_servos_s servo{};
-	servo.timestamp_sample = _timestamp_sample;
-	servo.timestamp = actuator_motors.timestamp;
-
-	actuator_motors.reversible_flags = _param_r_rev.get();
-
-	// motors
-	int motors_idx;
-
-	for (motors_idx = 0; motors_idx < 4; motors_idx++) {
-		float actuator_sp = _actuator_sp(motors_idx);
-		actuator_motors.control[motors_idx] = PX4_ISFINITE(actuator_sp) ? actuator_sp : NAN;
-	}
-
-	for (int i = motors_idx; i < actuator_motors_s::NUM_CONTROLS; i++) {
-		actuator_motors.control[i] = NAN;
-	}
-
-
-	// servos
-	int servos_idx;
-	for (servos_idx = 0; servos_idx < 4; servos_idx++) {
-		float actuator_sp = _servo_sp(servos_idx);
-		servo.control[servos_idx] = PX4_ISFINITE(actuator_sp) ? actuator_sp : NAN;
-	}
-
-	for (int i = servos_idx; i < actuator_servos_s::NUM_CONTROLS; i++) {
-		servo.control[i] = NAN;
-	}
-
-
-	_actuator_motors_pub.publish(actuator_motors);
-	_actuator_servos_pub.publish(servo);
-}
-////    END OF CUSTOM CODE    ////
+// ////    CUSTOM CODE    ////
+// void
+// ControlAllocator::publish_actuator_controls(ActuatorEffectiveness::ActuatorVector _actuator_sp, ActuatorEffectiveness::ActuatorVector _servo_sp)
+// {
+// 	if (!_publish_controls) {
+// 		return;
+// 	}
+//
+// 	actuator_motors_s actuator_motors;
+// 	actuator_motors.timestamp = hrt_absolute_time();
+// 	actuator_motors.timestamp_sample = _timestamp_sample;
+//
+// 	actuator_servos_s servo{};
+// 	servo.timestamp_sample = _timestamp_sample;
+// 	servo.timestamp = actuator_motors.timestamp;
+//
+// 	actuator_motors.reversible_flags = _param_r_rev.get();
+//
+// 	// motors
+// 	int motors_idx;
+//
+// 	for (motors_idx = 0; motors_idx < 4; motors_idx++) {
+// 		float actuator_sp = _actuator_sp(motors_idx);
+// 		actuator_motors.control[motors_idx] = PX4_ISFINITE(actuator_sp) ? actuator_sp : NAN;
+// 	}
+//
+// 	for (int i = motors_idx; i < actuator_motors_s::NUM_CONTROLS; i++) {
+// 		actuator_motors.control[i] = NAN;
+// 	}
+//
+//
+// 	// servos
+// 	int servos_idx;
+// 	for (servos_idx = 0; servos_idx < 4; servos_idx++) {
+// 		float actuator_sp = _servo_sp(servos_idx);
+// 		servo.control[servos_idx] = PX4_ISFINITE(actuator_sp) ? actuator_sp : NAN;
+// 	}
+//
+// 	for (int i = servos_idx; i < actuator_servos_s::NUM_CONTROLS; i++) {
+// 		servo.control[i] = NAN;
+// 	}
+//
+//
+// 	_actuator_motors_pub.publish(actuator_motors);
+// 	_actuator_servos_pub.publish(servo);
+// }
+// ////    END OF CUSTOM CODE    ////
 
 void
 ControlAllocator::publish_actuator_controls()
@@ -870,6 +887,7 @@ int ControlAllocator::print_status()
 	////    CUSTOM MODIFIED CODE    ////
 	PX4_INFO("Method [0]: %s", _control_allocation[0]->name());
 	////    END OF CUSTOM MODIFIED CODE    ////
+
 	// Print current airframe
 	if (_actuator_effectiveness != nullptr) {
 		PX4_INFO("Effectiveness Source: %s", _actuator_effectiveness->name());
