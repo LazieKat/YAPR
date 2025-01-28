@@ -222,10 +222,6 @@ public:
 	 */
 	virtual void stopMaskedMotorsWithZeroThrust(uint32_t stoppable_motors_mask, ActuatorVector &actuator_sp);
 
-
-	////    CUSTOM CODE    ////
-	virtual void allocate(matrix::Vector<float, NUM_AXES> c, matrix::Vector<float, NUM_ACTUATORS> &actuator_sp, matrix::Vector<float, NUM_ACTUATORS> &servo_sp) {};
-	////    END OF CUSTOM CODE    ////
 protected:
 	FlightPhase _flight_phase{FlightPhase::HOVER_FLIGHT};
 	uint32_t _stopped_motors_mask{0};
