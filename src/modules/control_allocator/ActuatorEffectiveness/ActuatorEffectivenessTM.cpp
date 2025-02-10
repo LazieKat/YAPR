@@ -26,41 +26,49 @@ ActuatorEffectivenessTM::ActuatorEffectivenessTM(ModuleParams *parent) : ModuleP
 {
 	PX4_INFO("Servos Parameters:");
 
-	for(int i = 0; i < SERVO_COUNT; i++)
+	for(int i = 0; i < MOTOR_COUNT; i++)
 	{
 		char name[20];
-		sprintf(name, "CA_SV_TL%d_MINA", i);
-		getParam(name, &this->min[i]);
-		sprintf(name, "CA_SV_TL%d_MAXA", i);
-		getParam(name, &this->max[i]);
-		sprintf(name, "CA_SV_TL%d_MINM", i);
-		getParam(name, &this->mec_min[i]);
-		sprintf(name, "CA_SV_TL%d_MAXM", i);
-		getParam(name, &this->mec_max[i]);
-		sprintf(name, "CA_SV_TL%d_TRM", i);
-		getParam(name, &this->trim[i]);
+		sprintf(name, "CA_ROTOR%d_PX", i);
+		getParam(name, &this->position_x[i]);
+		sprintf(name, "CA_ROTOR%d_PY", i);
+		getParam(name, &this->position_y[i]);
+		sprintf(name, "CA_ROTOR%d_PZ", i);
+		getParam(name, &this->position_z[i]);
 
-		if(mec_min[i] < min[i]) this->mec_min[i] = min[i];
-		if(mec_max[i] > max[i]) this->mec_max[i] = max[i];
+		sprintf(name, "CA_ROTOR%d_AX", i);
+		getParam(name, &this->axis_x[i]);
+		sprintf(name, "CA_ROTOR%d_AY", i);
+		getParam(name, &this->axis_y[i]);
+		sprintf(name, "CA_ROTOR%d_AZ", i);
+		getParam(name, &this->axis_z[i]);
 
-		PX4_INFO("    Servo #%d: min: %f\tmax: %f\tmec_min: %f\tmec_max: %f\ttrim: %f",
-				i+1, (double) min[i], (double) max[i], (double) mec_min[i], (double) mec_max[i], (double) trim[i]);
+		sprintf(name, "CA_ROTOR%d_CT", i);
+		getParam(name, &this->thrust_coef[i]);
+		sprintf(name, "CA_ROTOR%d_KM", i);
+		getParam(name, &this->moment_ratio[i]);
 	}
 }
 
 
-float ActuatorEffectivenessTM::deg2pwm(float deg, int servo_num)
+matrix::Vector3f
+ActuatorEffectivenessTM::arbit_rot(matrix::Vector3f a, matrix::Vector3f P, float theta)
 {
-	// restrain to mechanical limit
-	if(deg < mec_min[servo_num]) deg = mec_min[servo_num];
-	if(deg > mec_max[servo_num]) deg = mec_max[servo_num];
+	matrix::Vector3f result;
 
-	deg = deg + trim[servo_num];
+	float d = cos(theta);
+	float n = a.norm();
+	auto  c = P.cross(a);
+	float q = n * (float) sin(theta) / c.norm();
 
-	// map min max to -1 to 1 and find the value for deg
-	float value = (deg - min[servo_num]) / (max[servo_num] - min[servo_num]) * 2 - 1;
-	return value;
+	auto w = matrix::Vector3f(d * a(0), d * a(1), d * a(2));
+	auto z = matrix::Vector3f(q * c(0), q * c(1), q * c(2));
+	auto v = w + z;
+
+	result = matrix::Vector3f(n * v(0), n * v(1), n * v(2));
+	return result;
 }
+
 
 bool ActuatorEffectivenessTM::getEffectivenessMatrix(Configuration &configuration, EffectivenessUpdateReason external_update)
 {
@@ -73,88 +81,70 @@ bool ActuatorEffectivenessTM::getEffectivenessMatrix(Configuration &configuratio
 
 	// return rotors_added_successfully;
 
-	configuration.num_actuators_matrix[0] = 4;
+	configuration.num_actuators_matrix[0] = MOTOR_COUNT + SERVO_COUNT;
 	configuration.num_actuators_matrix[1] = 0;
 	configuration.trim[0].zero();
 	configuration.linearization_point[0].zero();
 	configuration.selected_matrix = 0;
-	configuration.num_actuators[0] = 4;
-	configuration.num_actuators[1] = 0;
+	configuration.num_actuators[0] = MOTOR_COUNT;
+	configuration.num_actuators[1] = SERVO_COUNT;
 
 	for (size_t i = 0; i < NUM_ACTUATORS * MAX_NUM_MATRICES; i++)
 	{
 		configuration.matrix_selection_indexes[i] = 0;
 	}
 
-	// fill in the effectiveness matrix which is 6x16, but columns after 4 are zero
-	float effectiveness_matrix[6][12] = {
-		{ 0.7071 ,  0.7071  ,  0       , -0.7071  , -0.7071  ,  0       ,  0.7071  , -0.7071  ,  0       , -0.7071  ,  0.7071  ,  0      } ,
-		{ 0.7071 , -0.7071  ,  0       , -0.7071  ,  0.7071  ,  0       , -0.7071  , -0.7071  ,  0       ,  0.7071  ,  0.7071  ,  0      } ,
-		{ 0      ,  0       , -1.0000  ,  0       ,  0       , -1.0000  ,  0       ,  0       , -1.0000  ,  0       ,  0       , -1.0000 } ,
-		{ 0      ,  0       , -0.1803  ,  0       ,  0       ,  0.1803  ,  0       ,  0       ,  0.1803  ,  0       ,  0       , -0.1803 } ,
-		{ 0      ,  0       ,  0.1803  ,  0       ,  0       , -0.1803  ,  0       ,  0       ,  0.1803  ,  0       ,  0       , -0.1803 } ,
-		{ 0      , -0.2550  ,  0.0500  ,  0       , -0.2550  ,  0.0500  ,  0       , -0.2550  , -0.0500  ,  0       , -0.2550  , -0.0500 } ,
-	};
+	matrix::Vector3f rotor_position[MOTOR_COUNT];
+	matrix::Vector3f rotor_axis_vertical[MOTOR_COUNT];
+	matrix::Vector3f rotor_axis_lateral[MOTOR_COUNT];
+	matrix::Vector3f rotor_axis_unused[MOTOR_COUNT];
+	matrix::Vector3f moments_x[MOTOR_COUNT];
+	matrix::Vector3f moments_y[MOTOR_COUNT];
+	matrix::Vector3f moments_z[MOTOR_COUNT];
 
-
-	for (size_t i = 0; i < NUM_AXES; i++)
+	for (int i = 0; i < MOTOR_COUNT; i++)
 	{
-		for (size_t j = 0; j < NUM_ACTUATORS; j++)
+		rotor_position[i] = matrix::Vector3f(position_x[i], position_y[i], position_z[i]);
+		rotor_axis_vertical[i] = matrix::Vector3f(axis_x[i], axis_y[i], axis_z[i]);
+		rotor_axis_lateral[i] = arbit_rot(rotor_axis_vertical[i], rotor_position[i], M_PI_2_F);
+		rotor_axis_unused[i] = matrix::Vector3f(0, 0, 0);
+
+		moments_x[i] = rotor_position[i].cross(rotor_axis_unused[i]);
+		moments_y[i] = rotor_position[i].cross(rotor_axis_lateral[i]);
+		moments_z[i] = rotor_position[i].cross(rotor_axis_vertical[i]) + matrix::Vector3f(0, 0, moment_ratio[i]);
+
+		configuration.effectiveness_matrices[0](0, 0 + i*3) = moments_x[i](0);
+		configuration.effectiveness_matrices[0](1, 0 + i*3) = moments_x[i](1);
+		configuration.effectiveness_matrices[0](2, 0 + i*3) = moments_x[i](2);
+		configuration.effectiveness_matrices[0](3, 0 + i*3) = rotor_axis_unused[i](0);
+		configuration.effectiveness_matrices[0](4, 0 + i*3) = rotor_axis_unused[i](1);
+		configuration.effectiveness_matrices[0](5, 0 + i*3) = rotor_axis_unused[i](2);
+
+		configuration.effectiveness_matrices[0](0, 1 + i*3) = moments_y[i](0);
+		configuration.effectiveness_matrices[0](1, 1 + i*3) = moments_y[i](1);
+		configuration.effectiveness_matrices[0](2, 1 + i*3) = moments_y[i](2);
+		configuration.effectiveness_matrices[0](3, 1 + i*3) = rotor_axis_lateral[i](0);
+		configuration.effectiveness_matrices[0](4, 1 + i*3) = rotor_axis_lateral[i](1);
+		configuration.effectiveness_matrices[0](5, 1 + i*3) = rotor_axis_lateral[i](2);
+
+		configuration.effectiveness_matrices[0](0, 2 + i*3) = moments_z[i](0);
+		configuration.effectiveness_matrices[0](1, 2 + i*3) = moments_z[i](1);
+		configuration.effectiveness_matrices[0](2, 2 + i*3) = moments_z[i](2);
+		configuration.effectiveness_matrices[0](3, 2 + i*3) = rotor_axis_vertical[i](0);
+		configuration.effectiveness_matrices[0](4, 2 + i*3) = rotor_axis_vertical[i](1);
+		configuration.effectiveness_matrices[0](5, 2 + i*3) = rotor_axis_vertical[i](2);
+	}
+
+
+	for (size_t i = 0; i < NUM_AXES ; i++)
+	{
+		for (size_t j = MOTOR_COUNT * 3; j < NUM_ACTUATORS; j++)
 		{
-			configuration.effectiveness_matrices[0](i, j) = j < 12 ? effectiveness_matrix[i][j] : 0;
+			configuration.effectiveness_matrices[0](i, j) = 0;
 		}
 	}
 
 	return true;
-}
-
-
-void ActuatorEffectivenessTM::allocate(matrix::Vector<float, NUM_AXES> c, ActuatorEffectiveness::ActuatorVector &actuator_sp, ActuatorEffectiveness::ActuatorVector &servo_sp)
-{
-	float mix[12][6] = {
-		{  0.1768  ,  0.1768  ,  0       ,  0       ,  0       , -0.0000 } ,
-		{  0.1768  , -0.1768  ,  0       ,  0       ,  0       , -0.9441 } ,
-		{  0       ,  0       , -0.2500  , -1.3865  ,  1.3865  ,  0.1851 } ,
-		{ -0.1768  , -0.1768  ,  0       ,  0       ,  0       , -0.0000 } ,
-		{ -0.1768  ,  0.1768  ,  0       ,  0       ,  0       , -0.9441 } ,
-		{  0       ,  0       , -0.2500  ,  1.3865  , -1.3865  ,  0.1851 } ,
-		{  0.1768  , -0.1768  ,  0       ,  0       ,  0       ,  0.0000 } ,
-		{ -0.1768  , -0.1768  ,  0       ,  0       ,  0       , -0.9441 } ,
-		{  0       ,  0       , -0.2500  ,  1.3865  ,  1.3865  , -0.1851 } ,
-		{ -0.1768  ,  0.1768  ,  0       ,  0       ,  0       , -0.0000 } ,
-		{  0.1768  ,  0.1768  ,  0       ,  0       ,  0       , -0.9441 } ,
-		{  0       ,  0       , -0.2500  , -1.3865  , -1.3865  , -0.1851 } ,
-	};
-
-	matrix::Matrix<float, 12, 6> _mix;
-
-	for (size_t i = 0; i < 12; i++)
-	{
-		for (size_t j = 0; j < 6; j++)
-		{
-			_mix(i, j) = mix[i][j];
-		}
-	}
-
-	matrix::Vector<float, 12> res;
-
-	res = _mix * c;
-
-	for (size_t i = 0; i < 4; i++)
-	{
-		int idx = i * 3;
-
-		float deg = -atan2f(res(idx+1), res(idx + 2)) * 57.29578f;
-		servo_sp(i) = deg2pwm(deg, i);
-
-		float act = sqrtf(res(idx + 1) * res(idx + 1) + res(idx + 2) * res(idx + 2));
-
-		actuator_sp(i) = act > 1.0f ? 1.0f : act;
-
-	}
-
-
-
 }
 
 

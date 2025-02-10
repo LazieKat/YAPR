@@ -12,107 +12,132 @@ ControlAllocationTM::setEffectivenessMatrix(
 			update_normalization_scale);
 	_mix_update_needed = true;
 	_normalization_needs_update = update_normalization_scale;
+
+
+	for(uint i = 0; i < _servo_count; i++)
+	{
+		char name[20];
+		sprintf(name, "CA_SV_TL%d_MINA", i);
+		getParam(name, &this->_min[i]);
+		sprintf(name, "CA_SV_TL%d_MAXA", i);
+		getParam(name, &this->_max[i]);
+		sprintf(name, "CA_SV_TL%d_MINM", i);
+		getParam(name, &this->_mec_min[i]);
+		sprintf(name, "CA_SV_TL%d_MAXM", i);
+		getParam(name, &this->_mec_max[i]);
+		sprintf(name, "CA_SV_TL%d_TRM", i);
+		getParam(name, &this->_trim[i]);
+
+		if(_mec_min[i] < _min[i]) this->_mec_min[i] = _min[i];
+		if(_mec_max[i] > _max[i]) this->_mec_max[i] = _max[i];
+	}
+}
+
+void
+ControlAllocationTM::getParam(const char * name, float * value)
+{
+	param_t param = param_find(name);
+
+	if(param == PARAM_INVALID)
+	{
+		PX4_ERR("Parameter %s not found", name);
+		return;
+	}
+
+	if(param_get(param, value) != PX4_OK)
+	{
+		PX4_ERR("Failed to get parameter %s", name);
+		return;
+	}
+
+	PX4_INFO("value of param %s is %f", name, (double) *value);
 }
 
 void
 ControlAllocationTM::updatePseudoInverse()
 {
-	float mix[16][6] = {
-		{-0.7071 ,  0.7071 ,  1 , 0 , 0 , -1} ,
-		{ 0.7071 , -0.7071 ,  1 , 0 , 0 , -1} ,
-		{ 0.7071 ,  0.7071 , -1 , 0 , 0 , -1} ,
-		{-0.7071 , -0.7071 , -1 , 0 , 0 , -1} ,
-		{0       , 0       ,  0 , 0 , 0 ,  0} ,
-		{0       , 0       ,  0 , 0 , 0 ,  0} ,
-		{0       , 0       ,  0 , 0 , 0 ,  0} ,
-		{0       , 0       ,  0 , 0 , 0 ,  0} ,
-		{0       , 0       ,  0 , 0 , 0 ,  0} ,
-		{0       , 0       ,  0 , 0 , 0 ,  0} ,
-		{0       , 0       ,  0 , 0 , 0 ,  0} ,
-		{0       , 0       ,  0 , 0 , 0 ,  0} ,
-		{0       , 0       ,  0 , 0 , 0 ,  0} ,
-		{0       , 0       ,  0 , 0 , 0 ,  0} ,
-		{0       , 0       ,  0 , 0 , 0 ,  0} ,
-		{0       , 0       ,  0 , 0 , 0 ,  0} ,
-	};
+	if (_mix_update_needed) {
+		matrix::geninv(_effectiveness, _mix);
 
-	for (size_t i = 0; i < NUM_ACTUATORS; i++) {
-		for (size_t j = 0; j < NUM_AXES; j++) {
-			_mix(i, j) = mix[i][j];
+		if (_normalization_needs_update && !_had_actuator_failure) {
+			updateControlAllocationMatrixScale();
+			_normalization_needs_update = false;
 		}
-	}
 
+		normalizeControlAllocationMatrix();
+		_mix_update_needed = false;
+	}
 }
 
 void
 ControlAllocationTM::updateControlAllocationMatrixScale()
 {
 	PX4_INFO(" ---------------------- updateControlAllocationMatrixScale --------------------------");
-	// Same scale on roll and pitch
-	if (_normalize_rpy) {
+	// // Same scale on roll and pitch
+	// if (_normalize_rpy) {
 
-		int num_non_zero_roll_torque = 0;
-		int num_non_zero_pitch_torque = 0;
+	// 	int num_non_zero_roll_torque = 0;
+	// 	int num_non_zero_pitch_torque = 0;
 
-		for (int i = 0; i < _num_actuators; i++) {
+	// 	for (int i = 0; i < _num_actuators; i++) {
 
-			if (fabsf(_mix(i, 0)) > 1e-3f) {
-				++num_non_zero_roll_torque;
-			}
+	// 		if (fabsf(_mix(i, 0)) > 1e-3f) {
+	// 			++num_non_zero_roll_torque;
+	// 		}
 
-			if (fabsf(_mix(i, 1)) > 1e-3f) {
-				++num_non_zero_pitch_torque;
-			}
-		}
+	// 		if (fabsf(_mix(i, 1)) > 1e-3f) {
+	// 			++num_non_zero_pitch_torque;
+	// 		}
+	// 	}
 
-		float roll_norm_scale = 1.f;
+	// 	float roll_norm_scale = 1.f;
 
-		if (num_non_zero_roll_torque > 0) {
-			roll_norm_scale = sqrtf(_mix.col(0).norm_squared() / (num_non_zero_roll_torque / 2.f));
-		}
+	// 	if (num_non_zero_roll_torque > 0) {
+	// 		roll_norm_scale = sqrtf(_mix.col(0).norm_squared() / (num_non_zero_roll_torque / 2.f));
+	// 	}
 
-		float pitch_norm_scale = 1.f;
+	// 	float pitch_norm_scale = 1.f;
 
-		if (num_non_zero_pitch_torque > 0) {
-			pitch_norm_scale = sqrtf(_mix.col(1).norm_squared() / (num_non_zero_pitch_torque / 2.f));
-		}
+	// 	if (num_non_zero_pitch_torque > 0) {
+	// 		pitch_norm_scale = sqrtf(_mix.col(1).norm_squared() / (num_non_zero_pitch_torque / 2.f));
+	// 	}
 
-		_control_allocation_scale(0) = fmaxf(roll_norm_scale, pitch_norm_scale);
-		_control_allocation_scale(1) = _control_allocation_scale(0);
+	// 	_control_allocation_scale(0) = fmaxf(roll_norm_scale, pitch_norm_scale);
+	// 	_control_allocation_scale(1) = _control_allocation_scale(0);
 
-		// Scale yaw separately
-		_control_allocation_scale(2) = _mix.col(2).max();
+	// 	// Scale yaw separately
+	// 	_control_allocation_scale(2) = _mix.col(2).max();
 
-	} else {
-		_control_allocation_scale(0) = 1.f;
-		_control_allocation_scale(1) = 1.f;
-		_control_allocation_scale(2) = 1.f;
-	}
+	// } else {
+	// 	_control_allocation_scale(0) = 1.f;
+	// 	_control_allocation_scale(1) = 1.f;
+	// 	_control_allocation_scale(2) = 1.f;
+	// }
 
-	// Scale thrust by the sum of the individual thrust axes, and use the scaling for the Z axis if there's no actuators
-	// (for tilted actuators)
-	_control_allocation_scale(THRUST_Z) = 1.f;
+	// // Scale thrust by the sum of the individual thrust axes, and use the scaling for the Z axis if there's no actuators
+	// // (for tilted actuators)
+	// _control_allocation_scale(THRUST_Z) = 1.f;
 
-	for (int axis_idx = 2; axis_idx >= 0; --axis_idx) {
-		int num_non_zero_thrust = 0;
-		float norm_sum = 0.f;
+	// for (int axis_idx = 2; axis_idx >= 0; --axis_idx) {
+	// 	int num_non_zero_thrust = 0;
+	// 	float norm_sum = 0.f;
 
-		for (int i = 0; i < _num_actuators; i++) {
-			float norm = fabsf(_mix(i, 3 + axis_idx));
-			norm_sum += norm;
+	// 	for (int i = 0; i < _num_actuators; i++) {
+	// 		float norm = fabsf(_mix(i, 3 + axis_idx));
+	// 		norm_sum += norm;
 
-			if (norm > FLT_EPSILON) {
-				++num_non_zero_thrust;
-			}
-		}
+	// 		if (norm > FLT_EPSILON) {
+	// 			++num_non_zero_thrust;
+	// 		}
+	// 	}
 
-		if (num_non_zero_thrust > 0) {
-			_control_allocation_scale(3 + axis_idx) = norm_sum / num_non_zero_thrust;
+	// 	if (num_non_zero_thrust > 0) {
+	// 		_control_allocation_scale(3 + axis_idx) = norm_sum / num_non_zero_thrust;
 
-		} else {
-			_control_allocation_scale(3 + axis_idx) = _control_allocation_scale(THRUST_Z);
-		}
-	}
+	// 	} else {
+	// 		_control_allocation_scale(3 + axis_idx) = _control_allocation_scale(THRUST_Z);
+	// 	}
+	// }
 }
 
 void
@@ -120,30 +145,44 @@ ControlAllocationTM::normalizeControlAllocationMatrix()
 {
 	PX4_INFO(" ---------------------- normalizeControlAllocationMatrix --------------------------");
 
-	if (_control_allocation_scale(0) > FLT_EPSILON) {
-		_mix.col(0) /= _control_allocation_scale(0);
-		_mix.col(1) /= _control_allocation_scale(1);
-	}
+	// if (_control_allocation_scale(0) > FLT_EPSILON) {
+	// 	_mix.col(0) /= _control_allocation_scale(0);
+	// 	_mix.col(1) /= _control_allocation_scale(1);
+	// }
 
-	if (_control_allocation_scale(2) > FLT_EPSILON) {
-		_mix.col(2) /= _control_allocation_scale(2);
-	}
+	// if (_control_allocation_scale(2) > FLT_EPSILON) {
+	// 	_mix.col(2) /= _control_allocation_scale(2);
+	// }
 
-	if (_control_allocation_scale(3) > FLT_EPSILON) {
-		_mix.col(3) /= _control_allocation_scale(3);
-		_mix.col(4) /= _control_allocation_scale(4);
-		_mix.col(5) /= _control_allocation_scale(5);
-	}
+	// if (_control_allocation_scale(3) > FLT_EPSILON) {
+	// 	_mix.col(3) /= _control_allocation_scale(3);
+	// 	_mix.col(4) /= _control_allocation_scale(4);
+	// 	_mix.col(5) /= _control_allocation_scale(5);
+	// }
 
-	// Set all the small elements to 0 to avoid issues
-	// in the control allocation algorithms
-	for (int i = 0; i < _num_actuators; i++) {
-		for (int j = 0; j < NUM_AXES; j++) {
-			if (fabsf(_mix(i, j)) < 1e-3f) {
-				_mix(i, j) = 0.f;
-			}
-		}
-	}
+	// // Set all the small elements to 0 to avoid issues
+	// // in the control allocation algorithms
+	// for (int i = 0; i < _num_actuators; i++) {
+	// 	for (int j = 0; j < NUM_AXES; j++) {
+	// 		if (fabsf(_mix(i, j)) < 1e-3f) {
+	// 			_mix(i, j) = 0.f;
+	// 		}
+	// 	}
+	// }
+}
+
+float
+ControlAllocationTM::deg2pwm(float deg, int servo_num)
+{
+	// restrain to mechanical limit
+	if(deg < _mec_min[servo_num]) deg = _mec_min[servo_num];
+	if(deg > _mec_max[servo_num]) deg = _mec_max[servo_num];
+
+	deg = deg + _trim[servo_num];
+
+	// map min max to -1 to 1 and find the value for deg
+	float value = (deg - _min[servo_num]) / (_max[servo_num] - _min[servo_num]) * 2 - 1;
+	return value;
 }
 
 void
@@ -155,7 +194,26 @@ ControlAllocationTM::allocate()
 	_prev_actuator_sp = _actuator_sp;
 
 	// Allocate
-	_actuator_sp = _actuator_trim + _mix * (_control_sp - _control_trim);
-}
+	_actuator_sp = _mix * _control_sp;
 
-////    END OF CUSTOM CODE    ////
+	matrix::Vector<float, NUM_ACTUATORS> motor_sp;
+	matrix::Vector<float, NUM_ACTUATORS> servo_sp;
+
+	for (size_t i = 0; i < _servo_count; i++)
+	{
+		int idx = i * 3;
+
+		float act = sqrtf(_actuator_sp(idx + 1) * _actuator_sp(idx + 1) + _actuator_sp(idx + 2) * _actuator_sp(idx + 2));
+		motor_sp(i) = act > 1.0f ? 1.0f : act;
+
+
+		float deg = -atan2f(_actuator_sp(idx+1), _actuator_sp(idx + 2)) * 57.29578f;
+		servo_sp(i) = deg2pwm(deg, i);
+	}
+
+	for (size_t i = 0; i < _motor_count; i++)
+	{
+		_actuator_sp(i) = motor_sp(i);
+		_actuator_sp(i + _servo_count) = servo_sp(i);
+	}
+}

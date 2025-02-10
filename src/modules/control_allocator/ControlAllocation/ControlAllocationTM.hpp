@@ -26,9 +26,21 @@ protected:
 	void updatePseudoInverse();
 
 private:
+	void getParam(const char * name, float * value);
+	float deg2pwm(float deg, int servo_num);
+
 	void normalizeControlAllocationMatrix();
 	void updateControlAllocationMatrixScale();
 	bool _normalization_needs_update{false};
+
+	static const uint _servo_count{4};
+	static const uint _motor_count{4};
+
+	float _min[_servo_count];
+	float _max[_servo_count];
+	float _mec_min[_servo_count];
+	float _mec_max[_servo_count];
+	float _trim[_servo_count];
 };
 
 ////    END OF CUSTOM CODE    ////

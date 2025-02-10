@@ -24,21 +24,27 @@ public:
 		normalize[0] = true;
 	}
 
+	virtual int numMatrices() const override{ return 1; }
+
 	const char *name() const override { return "TM"; }
 
 private:
 	static constexpr int NUM_ACTUATORS_MAX = 4;
-	struct ParamHandles {
-		param_t position_x;
-		param_t position_y;
-		param_t position_z;
-		param_t axis_x;
-		param_t axis_y;
-		param_t axis_z;
-		param_t thrust_coef;
-		param_t moment_ratio;
-	};
-	ParamHandles _param_handles[NUM_ACTUATORS_MAX];
+
+	void getParam(const char * name, float * value);
+	matrix::Vector3f arbit_rot(matrix::Vector3f a, matrix::Vector3f P, float theta);
+
+	static const uint8_t SERVO_COUNT = 4;
+	static const uint8_t MOTOR_COUNT = 4;
+
+	float position_x[MOTOR_COUNT];
+	float position_y[MOTOR_COUNT];
+	float position_z[MOTOR_COUNT];
+	float axis_x[MOTOR_COUNT];
+	float axis_y[MOTOR_COUNT];
+	float axis_z[MOTOR_COUNT];
+	float thrust_coef[MOTOR_COUNT];
+	float moment_ratio[MOTOR_COUNT];
 
 };
 
