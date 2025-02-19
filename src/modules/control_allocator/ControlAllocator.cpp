@@ -307,6 +307,38 @@ ControlAllocator::update_effectiveness_source()
 	return false;
 }
 
+
+////   CUSTOM CODE    ////
+
+bool
+ControlAllocator::getManualControlSetpoint(matrix::Vector3f &torque_sp, matrix::Vector3f &thrust_sp)
+{
+	manual_control_setpoint_s manual_control_setpoint;
+
+	bool update = _manual_control_setpoint_sub.update(&manual_control_setpoint);
+
+	if (!update) {
+		return false;
+	}
+
+
+	float yaw      = math::superexpo(manual_control_setpoint.yaw  , 0.35f, 0.70f) * 0.5f;
+	float pitch    = math::superexpo(manual_control_setpoint.pitch, 0.35f, 0.70f);
+	float roll     = math::superexpo(manual_control_setpoint.roll , 0.35f, 0.70f);
+	float throttle = math::superexpo(-(manual_control_setpoint.throttle/2 + 0.5f) , 0.0f , 0.0f);
+
+
+	torque_sp(2) = yaw;
+	thrust_sp(0) = pitch;
+	thrust_sp(1) = roll;
+	thrust_sp(2) = throttle;
+
+	return true;
+}
+
+////   END OF CUSTOM CODE    ////
+
+
 void
 ControlAllocator::Run()
 {
@@ -390,31 +422,32 @@ ControlAllocator::Run()
 	vehicle_torque_setpoint_s vehicle_torque_setpoint;
 	vehicle_thrust_setpoint_s vehicle_thrust_setpoint;
 
+	////   CUSTOM MODIFIED CODE    ////
 	// Run allocator on torque changes
 	if (_vehicle_torque_setpoint_sub.update(&vehicle_torque_setpoint)) {
+		float _torque_sp_p = _torque_sp(2);
+
 		_torque_sp = matrix::Vector3f(vehicle_torque_setpoint.xyz);
+		_torque_sp(2) = _torque_sp_p;
 
 		do_update = true;
 		_timestamp_sample = vehicle_torque_setpoint.timestamp_sample;
 
+		getManualControlSetpoint(_torque_sp, _thrust_sp);
 	}
 
-	// Also run allocator on thrust setpoint changes if the torque setpoint
-	// has not been updated for more than 5ms
-	if (_vehicle_thrust_setpoint_sub.update(&vehicle_thrust_setpoint)) {
-		_thrust_sp = matrix::Vector3f(vehicle_thrust_setpoint.xyz);
+	// // Also run allocator on thrust setpoint changes if the torque setpoint
+	// // has not been updated for more than 5ms
+	// if (_vehicle_thrust_setpoint_sub.update(&vehicle_thrust_setpoint)) {
+	// 	_thrust_sp = matrix::Vector3f(vehicle_thrust_setpoint.xyz);
 
-		if (dt > 0.005f) {
-			do_update = true;
-			_timestamp_sample = vehicle_thrust_setpoint.timestamp_sample;
-		}
-	}
+	// 	if (dt > 0.005f) {
+	// 		do_update = true;
+	// 		_timestamp_sample = vehicle_thrust_setpoint.timestamp_sample;
+	// 	}
+	// }
 
-	// ////    CUSTOM MODIFIED CODE    ////
-	// bool mine = true;
-	// ActuatorEffectiveness::ActuatorVector actuator_sp;
-	// ActuatorEffectiveness::ActuatorVector servo_sp;
-	// ////    END OF CUSTOM MODIFIED CODE    ////
+	////   END OF CUSTOM MODIFIED CODE    ////
 
 	if (do_update) {
 		_last_run = now;
@@ -463,38 +496,10 @@ ControlAllocator::Run()
 			_control_allocation[i]->clipActuatorSetpoint();
 		}
 
-		// ////    CUSTOM MODIFIED CODE    ////
-		// for (int i = 0; i < _num_control_allocation; ++i) {
-		// 	if(mine)
-		// 	{
-		// 		_actuator_effectiveness->allocate(c[i], actuator_sp, servo_sp);
-		// 		PX4_INFO("Goal: %.6f   %.6f   %.6f   %.6f   %.6f   %.6f", (double)c[0](0), (double)c[0](1), (double)c[0](2), (double)c[0](3), (double)c[0](4), (double)c[0](5));
-		// 		PX4_INFO("      %.6f   %.6f   %.6f   %.6f   %.6f   %.6f", (double)actuator_sp(0), (double)actuator_sp(1), (double)actuator_sp(2), (double)actuator_sp(3), (double)actuator_sp(4), (double)actuator_sp(5));
-		// 		PX4_INFO("      %.6f   %.6f   %.6f   %.6f   %.6f   %.6f", (double)servo_sp(0), (double)servo_sp(1), (double)servo_sp(2), (double)servo_sp(3), (double)servo_sp(4), (double)servo_sp(5));
-		// 	}
-		// 	else
-		// 	{
-		// 		_control_allocation[i]->setControlSetpoint(c[i]);
-		// 		_control_allocation[i]->allocate();
-		// 		_control_allocation[i]->clipActuatorSetpoint();
-		// 	}
-		// }
-		// ////    END OF CUSTOM MODIFIED CODE    ////
 	}
 
 	// Publish actuator setpoint and allocator status
 	publish_actuator_controls();
-
-	// ////    CUSTOM MODIFIED CODE    ////
-	// if(mine)
-	// {
-	// 	publish_actuator_controls(actuator_sp, servo_sp);
-	// }
-	// else
-	// {
-	// 	publish_actuator_controls();
-	// }
-	// ////    END OF CUSTOM MODIFIED CODE    ////
 
 	// Publish status at limited rate, as it's somewhat expensive and we use it for slower dynamics
 	// (i.e. anti-integrator windup)
@@ -696,53 +701,6 @@ ControlAllocator::publish_control_allocator_status(int matrix_index)
 	_control_allocator_status_pub[matrix_index].publish(control_allocator_status);
 }
 
-// ////    CUSTOM CODE    ////
-// void
-// ControlAllocator::publish_actuator_controls(ActuatorEffectiveness::ActuatorVector _actuator_sp, ActuatorEffectiveness::ActuatorVector _servo_sp)
-// {
-// 	if (!_publish_controls) {
-// 		return;
-// 	}
-//
-// 	actuator_motors_s actuator_motors;
-// 	actuator_motors.timestamp = hrt_absolute_time();
-// 	actuator_motors.timestamp_sample = _timestamp_sample;
-//
-// 	actuator_servos_s servo{};
-// 	servo.timestamp_sample = _timestamp_sample;
-// 	servo.timestamp = actuator_motors.timestamp;
-//
-// 	actuator_motors.reversible_flags = _param_r_rev.get();
-//
-// 	// motors
-// 	int motors_idx;
-//
-// 	for (motors_idx = 0; motors_idx < 4; motors_idx++) {
-// 		float actuator_sp = _actuator_sp(motors_idx);
-// 		actuator_motors.control[motors_idx] = PX4_ISFINITE(actuator_sp) ? actuator_sp : NAN;
-// 	}
-//
-// 	for (int i = motors_idx; i < actuator_motors_s::NUM_CONTROLS; i++) {
-// 		actuator_motors.control[i] = NAN;
-// 	}
-//
-//
-// 	// servos
-// 	int servos_idx;
-// 	for (servos_idx = 0; servos_idx < 4; servos_idx++) {
-// 		float actuator_sp = _servo_sp(servos_idx);
-// 		servo.control[servos_idx] = PX4_ISFINITE(actuator_sp) ? actuator_sp : NAN;
-// 	}
-//
-// 	for (int i = servos_idx; i < actuator_servos_s::NUM_CONTROLS; i++) {
-// 		servo.control[i] = NAN;
-// 	}
-//
-//
-// 	_actuator_motors_pub.publish(actuator_motors);
-// 	_actuator_servos_pub.publish(servo);
-// }
-// ////    END OF CUSTOM CODE    ////
 
 void
 ControlAllocator::publish_actuator_controls()

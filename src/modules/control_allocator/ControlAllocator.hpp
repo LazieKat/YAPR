@@ -83,6 +83,10 @@
 #include <uORB/topics/vehicle_status.h>
 #include <uORB/topics/failure_detector_status.h>
 
+////   CUSTOM CODE    ////
+#include <uORB/topics/manual_control_setpoint.h>
+////   END OF CUSTOM CODE    ////
+
 class ControlAllocator : public ModuleBase<ControlAllocator>, public ModuleParams, public px4::ScheduledWorkItem
 {
 public:
@@ -141,9 +145,14 @@ private:
 	void publish_control_allocator_status(int matrix_index);
 
 	void publish_actuator_controls();
-	// ////    CUSTOM CODE    ////
-	// void publish_aprintf("goodbye\n");printf("goodbye\n");printf("goodbye\n");printf("goodbye\n");ctuator_controls(matrix::Vector<float, NUM_ACTUATORS> _actuator_sp, matrix::Vector<float, NUM_ACTUATORS> _servo_sp);
-	// ////    END CUSTOM CODE    ////
+
+	////   CUSTOM CODE    ////
+	bool getManualControlSetpoint(matrix::Vector3f &torque_sp, matrix::Vector3f &thrust_sp);
+
+
+	uORB::SubscriptionCallbackWorkItem _manual_control_setpoint_sub{this, ORB_ID(manual_control_setpoint)};	 /**< vehicle thrust setpoint subscription */
+	////   END OF CUSTOM CODE    ////
+
 
 	AllocationMethod _allocation_method_id{AllocationMethod::NONE};
 	ControlAllocation *_control_allocation[ActuatorEffectiveness::MAX_NUM_MATRICES] {}; 	///< class for control allocation calculations
