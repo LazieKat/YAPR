@@ -70,6 +70,12 @@ ActuatorEffectivenessTM::arbit_rot(matrix::Vector3f a, matrix::Vector3f P, float
 }
 
 
+float ActuatorEffectivenessTM::constrainFloat(float i)
+{
+	// return abs(i) > 0.01 ? i : 0;
+	return i;
+}
+
 bool ActuatorEffectivenessTM::getEffectivenessMatrix(Configuration &configuration, EffectivenessUpdateReason external_update)
 {
 	if (external_update == EffectivenessUpdateReason::NO_EXTERNAL_UPDATE) {
@@ -106,33 +112,33 @@ bool ActuatorEffectivenessTM::getEffectivenessMatrix(Configuration &configuratio
 	{
 		rotor_position[i] = matrix::Vector3f(position_x[i], position_y[i], position_z[i]);
 		rotor_axis_vertical[i] = matrix::Vector3f(axis_x[i], axis_y[i], axis_z[i]);
-		rotor_axis_lateral[i] = arbit_rot(rotor_axis_vertical[i], rotor_position[i], M_PI_2_F);
+		rotor_axis_lateral[i] = arbit_rot(rotor_axis_vertical[i], rotor_position[i], -M_PI_2_F);
 		rotor_axis_unused[i] = matrix::Vector3f(0, 0, 0);
 
 		moments_x[i] = rotor_position[i].cross(rotor_axis_unused[i]);
 		moments_y[i] = rotor_position[i].cross(rotor_axis_lateral[i]);
-		moments_z[i] = rotor_position[i].cross(rotor_axis_vertical[i]) + matrix::Vector3f(0, 0, moment_ratio[i]);
+		moments_z[i] = rotor_position[i].cross(rotor_axis_vertical[i]) - matrix::Vector3f(0, 0, moment_ratio[i]);
 
-		configuration.effectiveness_matrices[0](0, 0 + i*3) = moments_x[i](0);
-		configuration.effectiveness_matrices[0](1, 0 + i*3) = moments_x[i](1);
-		configuration.effectiveness_matrices[0](2, 0 + i*3) = moments_x[i](2);
-		configuration.effectiveness_matrices[0](3, 0 + i*3) = rotor_axis_unused[i](0);
-		configuration.effectiveness_matrices[0](4, 0 + i*3) = rotor_axis_unused[i](1);
-		configuration.effectiveness_matrices[0](5, 0 + i*3) = rotor_axis_unused[i](2);
+		configuration.effectiveness_matrices[0](0, 0 + i*3) = thrust_coef[i] * constrainFloat(moments_x[i](0));
+		configuration.effectiveness_matrices[0](1, 0 + i*3) = thrust_coef[i] * constrainFloat(moments_x[i](1));
+		configuration.effectiveness_matrices[0](2, 0 + i*3) = thrust_coef[i] * constrainFloat(moments_x[i](2));
+		configuration.effectiveness_matrices[0](3, 0 + i*3) = thrust_coef[i] * constrainFloat(rotor_axis_unused[i](0));
+		configuration.effectiveness_matrices[0](4, 0 + i*3) = thrust_coef[i] * constrainFloat(rotor_axis_unused[i](1));
+		configuration.effectiveness_matrices[0](5, 0 + i*3) = thrust_coef[i] * constrainFloat(rotor_axis_unused[i](2));
 
-		configuration.effectiveness_matrices[0](0, 1 + i*3) = moments_y[i](0);
-		configuration.effectiveness_matrices[0](1, 1 + i*3) = moments_y[i](1);
-		configuration.effectiveness_matrices[0](2, 1 + i*3) = moments_y[i](2);
-		configuration.effectiveness_matrices[0](3, 1 + i*3) = rotor_axis_lateral[i](0);
-		configuration.effectiveness_matrices[0](4, 1 + i*3) = rotor_axis_lateral[i](1);
-		configuration.effectiveness_matrices[0](5, 1 + i*3) = rotor_axis_lateral[i](2);
+		configuration.effectiveness_matrices[0](0, 1 + i*3) = thrust_coef[i] * constrainFloat(moments_y[i](0));
+		configuration.effectiveness_matrices[0](1, 1 + i*3) = thrust_coef[i] * constrainFloat(moments_y[i](1));
+		configuration.effectiveness_matrices[0](2, 1 + i*3) = thrust_coef[i] * constrainFloat(moments_y[i](2));
+		configuration.effectiveness_matrices[0](3, 1 + i*3) = thrust_coef[i] * constrainFloat(rotor_axis_lateral[i](0));
+		configuration.effectiveness_matrices[0](4, 1 + i*3) = thrust_coef[i] * constrainFloat(rotor_axis_lateral[i](1));
+		configuration.effectiveness_matrices[0](5, 1 + i*3) = thrust_coef[i] * constrainFloat(rotor_axis_lateral[i](2));
 
-		configuration.effectiveness_matrices[0](0, 2 + i*3) = moments_z[i](0);
-		configuration.effectiveness_matrices[0](1, 2 + i*3) = moments_z[i](1);
-		configuration.effectiveness_matrices[0](2, 2 + i*3) = moments_z[i](2);
-		configuration.effectiveness_matrices[0](3, 2 + i*3) = rotor_axis_vertical[i](0);
-		configuration.effectiveness_matrices[0](4, 2 + i*3) = rotor_axis_vertical[i](1);
-		configuration.effectiveness_matrices[0](5, 2 + i*3) = rotor_axis_vertical[i](2);
+		configuration.effectiveness_matrices[0](0, 2 + i*3) = thrust_coef[i] * constrainFloat(moments_z[i](0));
+		configuration.effectiveness_matrices[0](1, 2 + i*3) = thrust_coef[i] * constrainFloat(moments_z[i](1));
+		configuration.effectiveness_matrices[0](2, 2 + i*3) = thrust_coef[i] * constrainFloat(moments_z[i](2));
+		configuration.effectiveness_matrices[0](3, 2 + i*3) = thrust_coef[i] * constrainFloat(rotor_axis_vertical[i](0));
+		configuration.effectiveness_matrices[0](4, 2 + i*3) = thrust_coef[i] * constrainFloat(rotor_axis_vertical[i](1));
+		configuration.effectiveness_matrices[0](5, 2 + i*3) = thrust_coef[i] * constrainFloat(rotor_axis_vertical[i](2));
 	}
 
 

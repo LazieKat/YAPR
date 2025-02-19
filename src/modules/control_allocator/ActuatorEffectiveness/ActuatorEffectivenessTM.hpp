@@ -19,6 +19,8 @@ public:
 		allocation_method_out[0] = AllocationMethod::TM;
 	}
 
+	float constrainFloat(float i);
+
 	void getNormalizeRPY(bool normalize[MAX_NUM_MATRICES]) const override
 	{
 		normalize[0] = true;

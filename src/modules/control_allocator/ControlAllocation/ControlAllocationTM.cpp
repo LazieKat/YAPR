@@ -73,71 +73,59 @@ void
 ControlAllocationTM::updateControlAllocationMatrixScale()
 {
 	PX4_INFO(" ---------------------- updateControlAllocationMatrixScale --------------------------");
-	// // Same scale on roll and pitch
-	// if (_normalize_rpy) {
+	// Same scale on roll and pitch
+	if (_normalize_rpy) {
+		for (size_t axis_idx = 0; axis_idx <= 1; axis_idx++)
+		{
+			int num_non_zero_rp_torque = 0;
 
-	// 	int num_non_zero_roll_torque = 0;
-	// 	int num_non_zero_pitch_torque = 0;
+			for (int i = 0; i < _num_actuators; i++) {
 
-	// 	for (int i = 0; i < _num_actuators; i++) {
+				if (fabsf(_mix(i, axis_idx)) > 1e-5f) {
+					++num_non_zero_rp_torque;
+				}
+			}
 
-	// 		if (fabsf(_mix(i, 0)) > 1e-3f) {
-	// 			++num_non_zero_roll_torque;
-	// 		}
+			float rp_norm_scale = 1.f;
 
-	// 		if (fabsf(_mix(i, 1)) > 1e-3f) {
-	// 			++num_non_zero_pitch_torque;
-	// 		}
-	// 	}
+			if (num_non_zero_rp_torque > 0) {
+				rp_norm_scale = sqrtf(_mix.col(axis_idx).norm_squared() / (num_non_zero_rp_torque / 2.f));
+			}
 
-	// 	float roll_norm_scale = 1.f;
+			_control_allocation_scale(axis_idx) = rp_norm_scale;
+		}
+	} else {
+		_control_allocation_scale(0) = 1.f;
+		_control_allocation_scale(1) = 1.f;
+		_control_allocation_scale(2) = 1.f;
+	}
 
-	// 	if (num_non_zero_roll_torque > 0) {
-	// 		roll_norm_scale = sqrtf(_mix.col(0).norm_squared() / (num_non_zero_roll_torque / 2.f));
-	// 	}
+	// Scale yaw separately
+	_control_allocation_scale(2) = matrix::Vector3f(_mix(0,2), _mix(1,2), _mix(2,2)).norm();
 
-	// 	float pitch_norm_scale = 1.f;
+	// Scale thrust by the sum of the individual thrust axes, and use the scaling for the Z axis if there's no actuators
+	// (for tilted actuators)
+	_control_allocation_scale(3) = 1.f;
+	_control_allocation_scale(4) = 1.f;
+	_control_allocation_scale(5) = 1.f;
 
-	// 	if (num_non_zero_pitch_torque > 0) {
-	// 		pitch_norm_scale = sqrtf(_mix.col(1).norm_squared() / (num_non_zero_pitch_torque / 2.f));
-	// 	}
+	for (int axis_idx = 3; axis_idx <= 5; axis_idx++) {
+		int num_non_zero_thrust = 0;
+		float norm_sum = 0.f;
 
-	// 	_control_allocation_scale(0) = fmaxf(roll_norm_scale, pitch_norm_scale);
-	// 	_control_allocation_scale(1) = _control_allocation_scale(0);
+		for (int i = 0; i < _num_actuators; i++) {
+			float norm = fabsf(_mix(i, axis_idx));
 
-	// 	// Scale yaw separately
-	// 	_control_allocation_scale(2) = _mix.col(2).max();
+			if (norm > 1e-5f) {
+				norm_sum += norm;
+				++num_non_zero_thrust;
+			}
+		}
 
-	// } else {
-	// 	_control_allocation_scale(0) = 1.f;
-	// 	_control_allocation_scale(1) = 1.f;
-	// 	_control_allocation_scale(2) = 1.f;
-	// }
-
-	// // Scale thrust by the sum of the individual thrust axes, and use the scaling for the Z axis if there's no actuators
-	// // (for tilted actuators)
-	// _control_allocation_scale(THRUST_Z) = 1.f;
-
-	// for (int axis_idx = 2; axis_idx >= 0; --axis_idx) {
-	// 	int num_non_zero_thrust = 0;
-	// 	float norm_sum = 0.f;
-
-	// 	for (int i = 0; i < _num_actuators; i++) {
-	// 		float norm = fabsf(_mix(i, 3 + axis_idx));
-	// 		norm_sum += norm;
-
-	// 		if (norm > FLT_EPSILON) {
-	// 			++num_non_zero_thrust;
-	// 		}
-	// 	}
-
-	// 	if (num_non_zero_thrust > 0) {
-	// 		_control_allocation_scale(3 + axis_idx) = norm_sum / num_non_zero_thrust;
-
-	// 	} else {
-	// 		_control_allocation_scale(3 + axis_idx) = _control_allocation_scale(THRUST_Z);
-	// 	}
-	// }
+		if (num_non_zero_thrust > 0) {
+			_control_allocation_scale(axis_idx) = norm_sum / num_non_zero_thrust;
+		}
+	}
 }
 
 void
@@ -145,30 +133,30 @@ ControlAllocationTM::normalizeControlAllocationMatrix()
 {
 	PX4_INFO(" ---------------------- normalizeControlAllocationMatrix --------------------------");
 
-	// if (_control_allocation_scale(0) > FLT_EPSILON) {
-	// 	_mix.col(0) /= _control_allocation_scale(0);
-	// 	_mix.col(1) /= _control_allocation_scale(1);
-	// }
+	if (_control_allocation_scale(0) > FLT_EPSILON) {
+		_mix.col(0) /= _control_allocation_scale(0);
+		_mix.col(1) /= _control_allocation_scale(1);
+	}
 
-	// if (_control_allocation_scale(2) > FLT_EPSILON) {
-	// 	_mix.col(2) /= _control_allocation_scale(2);
-	// }
+	if (_control_allocation_scale(2) > FLT_EPSILON) {
+		_mix.col(2) /= _control_allocation_scale(2);
+	}
 
-	// if (_control_allocation_scale(3) > FLT_EPSILON) {
-	// 	_mix.col(3) /= _control_allocation_scale(3);
-	// 	_mix.col(4) /= _control_allocation_scale(4);
-	// 	_mix.col(5) /= _control_allocation_scale(5);
-	// }
+	if (_control_allocation_scale(3) > FLT_EPSILON) {
+		_mix.col(3) /= _control_allocation_scale(3);
+		_mix.col(4) /= _control_allocation_scale(4);
+		_mix.col(5) /= _control_allocation_scale(5);
+	}
 
-	// // Set all the small elements to 0 to avoid issues
-	// // in the control allocation algorithms
-	// for (int i = 0; i < _num_actuators; i++) {
-	// 	for (int j = 0; j < NUM_AXES; j++) {
-	// 		if (fabsf(_mix(i, j)) < 1e-3f) {
-	// 			_mix(i, j) = 0.f;
-	// 		}
-	// 	}
-	// }
+	// Set all the small elements to 0 to avoid issues
+	// in the control allocation algorithms
+	for (int i = 0; i < _num_actuators; i++) {
+		for (int j = 0; j < NUM_AXES; j++) {
+			if (fabsf(_mix(i, j)) < 1e-5f) {
+				_mix(i, j) = 0.f;
+			}
+		}
+	}
 }
 
 float
