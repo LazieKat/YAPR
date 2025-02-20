@@ -228,6 +228,7 @@ private:
 	ParamHandles _param_handles{};
 	Params _params{};
 	bool _has_slew_rate{false};
+	int32_t _run_usual{1};
 
 	DEFINE_PARAMETERS(
 		(ParamInt<px4::params::CA_AIRFRAME>) _param_ca_airframe,

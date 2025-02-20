@@ -39,3 +39,59 @@ param set-default CA_ROTOR2_KM -0.05
 param set-default CA_ROTOR3_PX -1
 param set-default CA_ROTOR3_PY 1
 param set-default CA_ROTOR3_KM -0.05
+
+
+#### CUSTOM CODE START ####
+
+# optical flow setup
+param set-default EKF2_OF_CTRL     1
+param set-default EKF2_GPS_CTRL    0
+param set-default UAVCAN_SUB_FLOW  1
+param set-default UAVCAN_SUB_RNG   1
+param set-default EKF2_RNG_A_HMAX  10.0000
+param set-default EKF2_RNG_QLTY_T   0.2000
+param set-default UAVCAN_RNG_MIN    0.0800
+param set-default UAVCAN_RNG_MAX   30.0000
+param set-default SENS_FLOW_MINHGT  0.0800
+param set-default SENS_FLOW_MAXHGT 25.0000
+param set-default SENS_FLOW_MAXR    7.4000
+param set-default EKF2_OF_POS_X     0.1000
+
+
+# battery setup
+param set-default BAT1_N_CELLS 4
+param set-default BAT1_V_CHARGED 4.2000
+
+
+# radio setup
+param set-default COM_FLTMODE1 8
+param set-default COM_FLTMODE4 6
+param set-default COM_FLTMODE6 2
+param set-default MAN_ARM_GESTURE 0
+
+
+# set servos to 0 all the time
+param set-default PWM_AUX_FUNC1 201
+param set-default PWM_AUX_FUNC2 202
+param set-default PWM_AUX_FUNC3 203
+param set-default PWM_AUX_FUNC4 204
+param set-default PWM_AUX_TIM0 50
+
+param set-default PWM_AUX_DIS1 1500
+param set-default PWM_AUX_DIS2 1500
+param set-default PWM_AUX_DIS3 1500
+param set-default PWM_AUX_DIS4 1500
+
+param set-default PWM_AUX_MAX1 2100
+param set-default PWM_AUX_MAX2 2100
+param set-default PWM_AUX_MAX3 2100
+param set-default PWM_AUX_MAX4 2100
+
+param set-default PWM_AUX_MIN1 900
+param set-default PWM_AUX_MIN2 900
+param set-default PWM_AUX_MIN3 900
+param set-default PWM_AUX_MIN4 900
+
+param set-default PWM_AUX_REV 15
+
+#### CUSTOM CODE END ####

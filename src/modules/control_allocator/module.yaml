@@ -459,6 +459,25 @@ parameters:
             min: -10.0
             max: 10.0
             default: 0.0
+        CA_TM_CUTOFF:
+            description:
+                short: Throttle need to be met before tilting.
+                long: |
+                  This solves the issue of singularity where the servos would wobble
+                  at low throttle. When a motors throttle is bellow set limit, the
+                  servo of said motors is set to 0 degrees tilt.
+            type: float
+            decimal: 3
+            min: 0.0
+            max: 1.0
+            default: 0.125
+        CA_TM_RU:
+            description:
+                short: FOR DEBUGGING ONLY
+                long: |
+                  FOR DEBUGGING ONLY!!!
+            type: boolean
+            default: 1
         ### END CUSTOM CODE ###
 
         # helicopter
@@ -1233,4 +1252,9 @@ mixer:
                             label: "Mechanical\nMax Tilt"
                           - name: 'CA_SV_TL${i}_TRM'
                             label: "Servo Vertical\nTrim"
+                    parameters:
+                      - label: "Tilt Cutoff (Throttle)"
+                        name: "CA_TM_CUTOFF"
+                      - label: "Run usual control"
+                        name: "CA_TM_RU"
             ### END CUSTOM CODE ###

@@ -122,6 +122,20 @@ ControlAllocator::parameters_updated()
 		_has_slew_rate |= _params.slew_rate_servos[i] > FLT_EPSILON;
 	}
 
+	////   CUSTOM CODE  ////
+	param_t __param = param_find("CA_TM_RU");
+
+	if(__param != PARAM_INVALID)
+	{
+		if(param_get(__param, &_run_usual) != PX4_OK)
+		{
+			PX4_ERR("Failed to get parameter CA_TM_RU");
+			this->_run_usual = 1;
+		}
+	}
+	////  END OF CUSTOM CODE    ////
+
+
 	// Allocation method & effectiveness source
 	// Do this first: in case a new method is loaded, it will be configured below
 	bool updated = update_effectiveness_source();
@@ -428,25 +442,30 @@ ControlAllocator::Run()
 		float _torque_sp_p = _torque_sp(2);
 
 		_torque_sp = matrix::Vector3f(vehicle_torque_setpoint.xyz);
-		_torque_sp(2) = _torque_sp_p;
 
 		do_update = true;
 		_timestamp_sample = vehicle_torque_setpoint.timestamp_sample;
 
-		getManualControlSetpoint(_torque_sp, _thrust_sp);
+		// only run if using TM airframe
+		if (_effectiveness_source_id == EffectivenessSource::TM && !_run_usual) {
+			_torque_sp(2) = _torque_sp_p;
+			getManualControlSetpoint(_torque_sp, _thrust_sp);
+		}
 	}
 
-	// // Also run allocator on thrust setpoint changes if the torque setpoint
-	// // has not been updated for more than 5ms
-	// if (_vehicle_thrust_setpoint_sub.update(&vehicle_thrust_setpoint)) {
-	// 	_thrust_sp = matrix::Vector3f(vehicle_thrust_setpoint.xyz);
+	// run for all EXCEPT TM
+	if (_effectiveness_source_id != EffectivenessSource::TM || _run_usual) {
+		// Also run allocator on thrust setpoint changes if the torque setpoint
+		// has not been updated for more than 5ms
+		if (_vehicle_thrust_setpoint_sub.update(&vehicle_thrust_setpoint)) {
+			_thrust_sp = matrix::Vector3f(vehicle_thrust_setpoint.xyz);
 
-	// 	if (dt > 0.005f) {
-	// 		do_update = true;
-	// 		_timestamp_sample = vehicle_thrust_setpoint.timestamp_sample;
-	// 	}
-	// }
-
+			if (dt > 0.005f) {
+				do_update = true;
+				_timestamp_sample = vehicle_thrust_setpoint.timestamp_sample;
+			}
+		}
+	}
 	////   END OF CUSTOM MODIFIED CODE    ////
 
 	if (do_update) {
