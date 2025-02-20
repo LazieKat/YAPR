@@ -13,6 +13,8 @@ ControlAllocationTM::setEffectivenessMatrix(
 	_mix_update_needed = true;
 	_normalization_needs_update = update_normalization_scale;
 
+	getParam("CA_TM_CUTOFF", &this->_tilt_cuttoff);
+
 
 	for(uint i = 0; i < _servo_count; i++)
 	{
@@ -195,7 +197,13 @@ ControlAllocationTM::allocate()
 		motor_sp(i) = act > 1.0f ? 1.0f : act;
 
 
-		float deg = -atan2f(_actuator_sp(idx+1), _actuator_sp(idx + 2)) * 57.29578f;
+		float deg = 0;
+
+		if (motor_sp(i) > _tilt_cuttoff)
+		{
+			deg = -atan2f(_actuator_sp(idx+1), _actuator_sp(idx + 2)) * 57.29578f;
+		}
+
 		servo_sp(i) = deg2pwm(deg, i);
 	}
 

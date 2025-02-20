@@ -120,6 +120,8 @@ param set-default PWM_AUX_MIN4 900
 
 param set-default PWM_AUX_REV 15
 
+param set-default CA_TM_CUTOFF 0.125
+param set-default CA_TM_RU     1
 
 # optical flow setup
 param set-default EKF2_OF_CTRL     1

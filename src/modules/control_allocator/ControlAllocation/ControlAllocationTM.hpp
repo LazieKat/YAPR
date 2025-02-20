@@ -41,6 +41,7 @@ private:
 	float _mec_min[_servo_count];
 	float _mec_max[_servo_count];
 	float _trim[_servo_count];
+	float _tilt_cuttoff{0.0f};
 };
 
 ////    END OF CUSTOM CODE    ////
