@@ -123,6 +123,15 @@ param set-default PWM_AUX_REV 15
 param set-default CA_TM_CUTOFF 0.125
 param set-default CA_TM_RU     1
 
+
+# YAW PID setup
+
+param set-default MC_YAWRATE_P 0.0500
+param set-default MC_YAWRATE_I 0.0000
+param set-default MC_YAWRATE_D 0.0000
+param set-default MC_YAWRATE_K 1.0000
+
+
 # optical flow setup
 param set-default EKF2_OF_CTRL     1
 param set-default EKF2_GPS_CTRL    0

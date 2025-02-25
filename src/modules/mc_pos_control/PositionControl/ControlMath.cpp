@@ -46,17 +46,17 @@ namespace ControlMath
 {
 void thrustToAttitude(const Vector3f &thr_sp, const float yaw_sp, vehicle_attitude_setpoint_s &att_sp)
 {
-	bodyzToAttitude(-thr_sp, yaw_sp, att_sp);
-	att_sp.thrust_body[2] = -thr_sp.length();
+	// bodyzToAttitude(-thr_sp, yaw_sp, att_sp);
+	// att_sp.thrust_body[2] = -thr_sp.length();
 
 	////   CUSTOM CODE   ////
-	// att_sp.thrust_body[0] = thr_sp(0);
-	// att_sp.thrust_body[1] = thr_sp(1);
-	// att_sp.thrust_body[2] = thr_sp(2);
+	att_sp.thrust_body[0] = thr_sp(0);
+	att_sp.thrust_body[1] = thr_sp(1);
+	att_sp.thrust_body[2] = thr_sp(2);
 
-	// // set quaternion to match roll 0 and pitch 0 and desired yaw
-	// Quatf q_sp = Eulerf(0.0f, 0.0f, 0.0f);
-	// q_sp.copyTo(att_sp.q_d);
+	// set quaternion to match roll 0 and pitch 0 and desired yaw
+	Quatf q_sp = Eulerf(0.0f, 0.0f, 0.0f);
+	q_sp.copyTo(att_sp.q_d);
 	////   END CUSTOM CODE   ////
 }
 
