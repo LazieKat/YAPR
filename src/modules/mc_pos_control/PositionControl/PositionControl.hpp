@@ -76,7 +76,9 @@ class PositionControl
 {
 public:
 
-	PositionControl() = default;
+	////  CUSTOM MODIFIED CODE   ////
+	PositionControl();
+	////  END OF CUSTOM CODE   ////
 	~PositionControl() = default;
 
 	/**
@@ -233,4 +235,6 @@ private:
 	matrix::Vector3f _thr_sp; /**< desired thrust */
 	float _yaw_sp{}; /**< desired heading */
 	float _yawspeed_sp{}; /** desired yaw-speed */
+
+	bool _no_tilt{false}; /**< if set, the body_z to attidue will produce 3D thrust vector with zero pitch and roll */
 };

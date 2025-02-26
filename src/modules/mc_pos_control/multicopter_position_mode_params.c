@@ -199,3 +199,16 @@ PARAM_DEFINE_FLOAT(MPC_Z_MAN_EXPO, 0.6f);
  * @group Multicopter Position Control
  */
 PARAM_DEFINE_FLOAT(MPC_YAW_EXPO, 0.6f);
+
+
+////  CUSTOM CODE ////
+/**
+ * Disable body tilt in control. Use for tilt-rotor drones.
+ *
+ * 0 Tilt body to move
+ * 1 Produce 3D thrust vector setpoints
+ *
+ * @group Multicopter Position Control
+ */
+PARAM_DEFINE_INT32(POS_NO_TILT, 0);
+////  END OF CUSTOM CODE   ////

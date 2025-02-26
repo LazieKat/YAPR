@@ -41,10 +41,28 @@
 #include <mathlib/mathlib.h>
 #include <px4_platform_common/defines.h>
 #include <geo/geo.h>
+////  CUSTOM MODIFIED CODE   ////
+#include <parameters/param.h>
+////  END OF CUSTOM CODE   ////
 
 using namespace matrix;
 
 const trajectory_setpoint_s PositionControl::empty_trajectory_setpoint = {0, {NAN, NAN, NAN}, {NAN, NAN, NAN}, {NAN, NAN, NAN}, {NAN, NAN, NAN}, NAN, NAN};
+
+////  CUSTOM MODIFIED CODE   ////
+PositionControl::PositionControl()
+{
+	// get CA_AIRFRAME parameter
+	param_t _param_pos_no_tilt = param_find("POS_NO_TILT");
+
+	if (_param_pos_no_tilt != PARAM_INVALID) {
+		int32_t val;
+		param_get(_param_pos_no_tilt, &val);
+
+		_no_tilt = (val == 1);
+	}
+}
+////  END OF CUSTOM CODE   ////
 
 void PositionControl::setVelocityGains(const Vector3f &P, const Vector3f &I, const Vector3f &D)
 {
@@ -265,6 +283,8 @@ void PositionControl::getLocalPositionSetpoint(vehicle_local_position_setpoint_s
 
 void PositionControl::getAttitudeSetpoint(vehicle_attitude_setpoint_s &attitude_setpoint) const
 {
-	ControlMath::thrustToAttitude(_thr_sp, _yaw_sp, attitude_setpoint);
+	//// CUSTOM MODIFIED CODE   ////
+	ControlMath::thrustToAttitude(_thr_sp, _yaw_sp, attitude_setpoint, _no_tilt);
+	//// END OF CUSTOM CODE   ////
 	attitude_setpoint.yaw_sp_move_rate = _yawspeed_sp;
 }

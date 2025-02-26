@@ -44,21 +44,27 @@ using namespace matrix;
 
 namespace ControlMath
 {
-void thrustToAttitude(const Vector3f &thr_sp, const float yaw_sp, vehicle_attitude_setpoint_s &att_sp)
+
+////   CUSTOM MODIFIED CODE   ////
+void thrustToAttitude(const Vector3f &thr_sp, const float yaw_sp, vehicle_attitude_setpoint_s &att_sp, bool no_tilt)
 {
-	// bodyzToAttitude(-thr_sp, yaw_sp, att_sp);
-	// att_sp.thrust_body[2] = -thr_sp.length();
+	if(no_tilt)
+	{
+		att_sp.thrust_body[0] = thr_sp(0);
+		att_sp.thrust_body[1] = thr_sp(1);
+		att_sp.thrust_body[2] = thr_sp(2);
 
-	////   CUSTOM CODE   ////
-	att_sp.thrust_body[0] = thr_sp(0);
-	att_sp.thrust_body[1] = thr_sp(1);
-	att_sp.thrust_body[2] = thr_sp(2);
+		// set quaternion to match roll 0 and pitch 0 and desired yaw
+		Quatf q_sp = Eulerf(0.0f, 0.0f, 0.0f);
+		q_sp.copyTo(att_sp.q_d);
 
-	// set quaternion to match roll 0 and pitch 0 and desired yaw
-	Quatf q_sp = Eulerf(0.0f, 0.0f, 0.0f);
-	q_sp.copyTo(att_sp.q_d);
-	////   END CUSTOM CODE   ////
+		return;
+	}
+
+	bodyzToAttitude(-thr_sp, yaw_sp, att_sp);
+	att_sp.thrust_body[2] = -thr_sp.length();
 }
+////   END OF CUSTOM CODE   ////
 
 void limitTilt(Vector3f &body_unit, const Vector3f &world_unit, const float max_angle)
 {
