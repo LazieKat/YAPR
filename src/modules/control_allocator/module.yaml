@@ -478,6 +478,15 @@ parameters:
                   FOR DEBUGGING ONLY!!!
             type: boolean
             default: 1
+        CA_TM_AXIS:
+            description:
+                short: Axis of tilt.
+            type: enum
+            values:
+              0: 'Dual-axis'
+              1: 'Single-axis (Lateral)'
+              2: 'Single-axis (Bilateral)'
+            default: 1
         ### END CUSTOM CODE ###
 
         # helicopter
@@ -1257,4 +1266,6 @@ mixer:
                         name: "CA_TM_CUTOFF"
                       - label: "Run usual control"
                         name: "CA_TM_RU"
+                      - label: "Axis of tilt"
+                        name: "CA_TM_AXIS"
             ### END CUSTOM CODE ###

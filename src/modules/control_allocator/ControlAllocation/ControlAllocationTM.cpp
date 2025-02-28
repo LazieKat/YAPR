@@ -2,6 +2,8 @@
 
 #include "ControlAllocationTM.hpp"
 
+#include <math.h>
+
 void
 ControlAllocationTM::setEffectivenessMatrix(
 	const matrix::Matrix<float, ControlAllocation::NUM_AXES, ControlAllocation::NUM_ACTUATORS> &effectiveness,
@@ -75,59 +77,82 @@ void
 ControlAllocationTM::updateControlAllocationMatrixScale()
 {
 	PX4_INFO(" ---------------------- updateControlAllocationMatrixScale --------------------------");
-	// Same scale on roll and pitch
-	if (_normalize_rpy) {
-		for (size_t axis_idx = 0; axis_idx <= 1; axis_idx++)
+
+	// MOMENTS STUFF
+	if (_normalize_rpy)
+	{
+		matrix::Vector<float, _motor_count> norm_roll;
+		matrix::Vector<float, _motor_count> norm_pitch;
+		matrix::Vector<float, _motor_count> norm_yaw;
+
+		int nz_roll  = 0;
+		int nz_pitch = 0;
+		int nz_yaw   = 0;
+
+		for (uint32_t i = 0; i < _motor_count; i++)
 		{
-			int num_non_zero_rp_torque = 0;
+			uint32_t idx = i * 3;
 
-			for (int i = 0; i < _num_actuators; i++) {
+			norm_roll (i) = matrix::Vector3f(_mix(idx, 0), _mix(idx + 1, 0), _mix(idx + 2, 0)).norm();
+			norm_pitch(i) = matrix::Vector3f(_mix(idx, 1), _mix(idx + 1, 1), _mix(idx + 2, 1)).norm();
+			norm_yaw  (i) = matrix::Vector3f(_mix(idx, 2), _mix(idx + 1, 2), _mix(idx + 2, 2)).norm();
 
-				if (fabsf(_mix(i, axis_idx)) > 1e-5f) {
-					++num_non_zero_rp_torque;
-				}
-			}
+			norm_roll (i) = norm_roll (i) < eps ? 0 : norm_roll (i);
+			norm_pitch(i) = norm_pitch(i) < eps ? 0 : norm_pitch(i);
+			norm_yaw  (i) = norm_yaw  (i) < eps ? 0 : norm_yaw  (i);
 
-			float rp_norm_scale = 1.f;
-
-			if (num_non_zero_rp_torque > 0) {
-				rp_norm_scale = sqrtf(_mix.col(axis_idx).norm_squared() / (num_non_zero_rp_torque / 2.f));
-			}
-
-			_control_allocation_scale(axis_idx) = rp_norm_scale;
+			if (norm_roll (i) > 0) nz_roll++;
+			if (norm_pitch(i) > 0) nz_pitch++;
+			if (norm_yaw  (i) > 0) nz_yaw++;
 		}
-	} else {
+
+		_control_allocation_scale(0) = sqrtf(norm_roll.norm_squared() / (nz_roll/2));
+		_control_allocation_scale(1) = sqrtf(norm_pitch.norm_squared() / (nz_pitch/2));
+		_control_allocation_scale(2) = norm_yaw.max();
+	}
+	else
+	{
 		_control_allocation_scale(0) = 1.f;
 		_control_allocation_scale(1) = 1.f;
 		_control_allocation_scale(2) = 1.f;
 	}
 
-	// Scale yaw separately
-	_control_allocation_scale(2) = matrix::Vector3f(_mix(0,2), _mix(1,2), _mix(2,2)).norm();
 
-	// Scale thrust by the sum of the individual thrust axes, and use the scaling for the Z axis if there's no actuators
-	// (for tilted actuators)
-	_control_allocation_scale(3) = 1.f;
-	_control_allocation_scale(4) = 1.f;
-	_control_allocation_scale(5) = 1.f;
+	// THRUST STUFF
+	float norm_x_sum = 0;
+	float norm_y_sum = 0;
+	float norm_z_sum = 0;
 
-	for (int axis_idx = 3; axis_idx <= 5; axis_idx++) {
-		int num_non_zero_thrust = 0;
-		float norm_sum = 0.f;
+	int nz_x = 0;
+	int nz_y = 0;
+	int nz_z = 0;
 
-		for (int i = 0; i < _num_actuators; i++) {
-			float norm = fabsf(_mix(i, axis_idx));
+	for (size_t i = 0; i < 4; i++)
+	{
+		size_t idx = i * 3;
 
-			if (norm > 1e-5f) {
-				norm_sum += norm;
-				++num_non_zero_thrust;
-			}
-		}
+		float norm_x, norm_y, norm_z;
 
-		if (num_non_zero_thrust > 0) {
-			_control_allocation_scale(axis_idx) = norm_sum / num_non_zero_thrust;
-		}
+		norm_x = matrix::Vector3f(_mix(idx, 3), _mix(idx + 1, 3), _mix(idx + 2, 3)).norm();
+		norm_y = matrix::Vector3f(_mix(idx, 4), _mix(idx + 1, 4), _mix(idx + 2, 4)).norm();
+		norm_z = matrix::Vector3f(_mix(idx, 5), _mix(idx + 1, 5), _mix(idx + 2, 5)).norm();
+
+		norm_x = norm_x < eps ? 0 : norm_x;
+		norm_y = norm_y < eps ? 0 : norm_y;
+		norm_z = norm_z < eps ? 0 : norm_z;
+
+		if (norm_x > 0) nz_x++;
+		if (norm_y > 0) nz_y++;
+		if (norm_z > 0) nz_z++;
+
+		norm_x_sum += norm_x;
+		norm_y_sum += norm_y;
+		norm_z_sum += norm_z;
 	}
+
+	_control_allocation_scale(3) = norm_x_sum / nz_x;
+	_control_allocation_scale(4) = norm_y_sum / nz_y;
+	_control_allocation_scale(5) = norm_z_sum / nz_z;
 }
 
 void
@@ -154,7 +179,7 @@ ControlAllocationTM::normalizeControlAllocationMatrix()
 	// in the control allocation algorithms
 	for (int i = 0; i < _num_actuators; i++) {
 		for (int j = 0; j < NUM_AXES; j++) {
-			if (fabsf(_mix(i, j)) < 1e-5f) {
+			if (fabsf(_mix(i, j)) < eps) {
 				_mix(i, j) = 0.f;
 			}
 		}

@@ -26,6 +26,8 @@ protected:
 	void updatePseudoInverse();
 
 private:
+	float eps = 1e-5f;
+
 	void getParam(const char * name, float * value);
 	float deg2pwm(float deg, int servo_num);
 
