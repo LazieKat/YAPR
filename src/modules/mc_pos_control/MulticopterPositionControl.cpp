@@ -541,7 +541,20 @@ void MulticopterPositionControl::Run()
 				math::min(speed_up, _param_mpc_z_vel_max_up.get()), // takeoff ramp starts with negative velocity limit
 				math::max(speed_down, 0.f));
 
-			_control.setInputSetpoint(_setpoint);
+			////  CUSTOM MODIFIED CODE ////
+			if (_manual_control_setpoint_sub.update(&_manual_control_setpoint)) {
+				_sticks[0] = _manual_control_setpoint.roll;
+				_sticks[1] = _manual_control_setpoint.pitch;
+			}
+
+
+			_setpoint.position[0] = 0;
+			_setpoint.position[1] = 0;
+			_setpoint.velocity[0] = 0;
+			_setpoint.velocity[1] = 0;
+
+			_control.setInputSetpoint(_setpoint, _sticks);
+			////  END CUSTOM MODIFIED CODE ////
 
 			// update states
 			if (!PX4_ISFINITE(_setpoint.position[2])
@@ -570,7 +583,9 @@ void MulticopterPositionControl::Run()
 				// Failsafe
 				_vehicle_constraints = {0, NAN, NAN, false, {}}; // reset constraints
 
-				_control.setInputSetpoint(generateFailsafeSetpoint(vehicle_local_position.timestamp_sample, states, true));
+				////  CUSTOM MODIFIED CODE ////
+				_control.setInputSetpoint(generateFailsafeSetpoint(vehicle_local_position.timestamp_sample, states, true), _sticks);
+				////  END CUSTOM MODIFIED CODE ////
 				_control.setVelocityLimits(_param_mpc_xy_vel_max.get(), _param_mpc_z_vel_max_up.get(), _param_mpc_z_vel_max_dn.get());
 				_control.update(dt);
 			}

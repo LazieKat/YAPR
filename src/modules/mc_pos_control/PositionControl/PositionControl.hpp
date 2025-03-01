@@ -146,7 +146,9 @@ public:
 	 * Note: NAN value means no feed forward/leave state uncontrolled if there's no higher order setpoint.
 	 * @param setpoint setpoints including feed-forwards to execute in update()
 	 */
-	void setInputSetpoint(const trajectory_setpoint_s &setpoint);
+	////  CUSTOM MODIFIED CODE   ////
+	void setInputSetpoint(const trajectory_setpoint_s &setpoint, float att_stick[2]);
+	////  END OF CUSTOM CODE   ////
 
 	/**
 	 * Apply P-position and PID-velocity controller that updates the member
@@ -237,4 +239,7 @@ private:
 	float _yawspeed_sp{}; /** desired yaw-speed */
 
 	bool _no_tilt{false}; /**< if set, the body_z to attidue will produce 3D thrust vector with zero pitch and roll */
+	float _tilt_limit[2]{15, 15}; /**< maximum tilt in pitch and roll in degrees */
+
+	float _att_desired[3]{0,0,0}; /**< desired attitude for thrustToAttitude */
 };

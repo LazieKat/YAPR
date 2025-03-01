@@ -52,7 +52,7 @@ namespace ControlMath
  * @param att_sp attitude setpoint to fill
  */
 ////  CUSTOM MODIFIED CODE   ////
-void thrustToAttitude(const matrix::Vector3f &thr_sp, const float yaw_sp, vehicle_attitude_setpoint_s &att_sp, bool no_tilt);
+void thrustToAttitude(const matrix::Vector3f &thr_sp, const float att_desired[3], vehicle_attitude_setpoint_s &att_sp, bool no_tilt);
 ////  END OF CUSTOM CODE   ////
 
 /**

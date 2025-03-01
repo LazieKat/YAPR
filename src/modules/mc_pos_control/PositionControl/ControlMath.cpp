@@ -46,7 +46,7 @@ namespace ControlMath
 {
 
 ////   CUSTOM MODIFIED CODE   ////
-void thrustToAttitude(const Vector3f &thr_sp, const float yaw_sp, vehicle_attitude_setpoint_s &att_sp, bool no_tilt)
+void thrustToAttitude(const Vector3f &thr_sp, const float att_desired[3], vehicle_attitude_setpoint_s &att_sp, bool no_tilt)
 {
 	if(no_tilt)
 	{
@@ -55,13 +55,17 @@ void thrustToAttitude(const Vector3f &thr_sp, const float yaw_sp, vehicle_attitu
 		att_sp.thrust_body[2] = thr_sp(2);
 
 		// set quaternion to match roll 0 and pitch 0 and desired yaw
-		Quatf q_sp = Eulerf(0.0f, 0.0f, 0.0f);
+		float roll  = 0.01745f * att_desired[0];
+		float pitch = 0.01745f * att_desired[1];
+		float yaw   = 0.01745f * 0.f;
+
+		Quatf q_sp = Eulerf(roll, pitch, yaw);
 		q_sp.copyTo(att_sp.q_d);
 
 		return;
 	}
 
-	bodyzToAttitude(-thr_sp, yaw_sp, att_sp);
+	bodyzToAttitude(-thr_sp, att_desired[2], att_sp);
 	att_sp.thrust_body[2] = -thr_sp.length();
 }
 ////   END OF CUSTOM CODE   ////

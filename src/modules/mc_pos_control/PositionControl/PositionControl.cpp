@@ -114,13 +114,18 @@ void PositionControl::setState(const PositionControlStates &states)
 	_vel_dot = states.acceleration;
 }
 
-void PositionControl::setInputSetpoint(const trajectory_setpoint_s &setpoint)
+void PositionControl::setInputSetpoint(const trajectory_setpoint_s &setpoint, float att_stick[2])
 {
 	_pos_sp = Vector3f(setpoint.position);
 	_vel_sp = Vector3f(setpoint.velocity);
 	_acc_sp = Vector3f(setpoint.acceleration);
 	_yaw_sp = setpoint.yaw;
 	_yawspeed_sp = setpoint.yawspeed;
+
+	// convert sticks to angle setpoints
+	_att_desired[0] = att_stick[0] * _tilt_limit[0];
+	_att_desired[1] = att_stick[1] * _tilt_limit[1];
+	_att_desired[2] = _yaw_sp;
 }
 
 bool PositionControl::update(const float dt)
@@ -284,7 +289,7 @@ void PositionControl::getLocalPositionSetpoint(vehicle_local_position_setpoint_s
 void PositionControl::getAttitudeSetpoint(vehicle_attitude_setpoint_s &attitude_setpoint) const
 {
 	//// CUSTOM MODIFIED CODE   ////
-	ControlMath::thrustToAttitude(_thr_sp, _yaw_sp, attitude_setpoint, _no_tilt);
+	ControlMath::thrustToAttitude(_thr_sp, _att_desired, attitude_setpoint, _no_tilt);
 	//// END OF CUSTOM CODE   ////
 	attitude_setpoint.yaw_sp_move_rate = _yawspeed_sp;
 }

@@ -67,6 +67,9 @@
 #include <uORB/topics/vehicle_land_detected.h>
 #include <uORB/topics/vehicle_local_position.h>
 #include <uORB/topics/vehicle_local_position_setpoint.h>
+//// CUSTOM MODIFIED CODE   ////
+#include <uORB/topics/manual_control_setpoint.h>
+//// END OF CUSTOM CODE   ////
 
 using namespace time_literals;
 
@@ -108,6 +111,13 @@ private:
 	uORB::Subscription _vehicle_constraints_sub{ORB_ID(vehicle_constraints)};
 	uORB::Subscription _vehicle_control_mode_sub{ORB_ID(vehicle_control_mode)};
 	uORB::Subscription _vehicle_land_detected_sub{ORB_ID(vehicle_land_detected)};
+	////  CUSTOM MODIFIED CODE   ////
+	uORB::Subscription _manual_control_setpoint_sub{ORB_ID(manual_control_setpoint)};
+
+	manual_control_setpoint_s _manual_control_setpoint{};
+
+	float _sticks[2]{0.f, 0.f};
+	////  END OF CUSTOM CODE   ////
 
 	hrt_abstime _time_stamp_last_loop{0};		/**< time stamp of last loop iteration */
 	hrt_abstime _time_position_control_enabled{0};
