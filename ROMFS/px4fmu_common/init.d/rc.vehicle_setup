@@ -24,6 +24,15 @@ then
 fi
 
 #
+# Tiltrotor Multicopter setup.
+#
+if [ $VEHICLE_TYPE = tm ]
+then
+	# Start standard multicopter apps.
+	. ${R}etc/init.d/rc.tm_apps
+fi
+
+#
 # UGV setup.
 #
 if [ $VEHICLE_TYPE = rover ]

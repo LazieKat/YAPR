@@ -1,0 +1,5 @@
+menuconfig MODULES_AATEST
+	bool "aatest"
+	default n
+	---help---
+		Enable support for aatest
