@@ -542,16 +542,16 @@ void MulticopterPositionControl::Run()
 				math::max(speed_down, 0.f));
 
 			////  CUSTOM MODIFIED CODE ////
-			if (_manual_control_setpoint_sub.update(&_manual_control_setpoint)) {
-				_sticks[0] = _manual_control_setpoint.roll;
-				_sticks[1] = _manual_control_setpoint.pitch;
-			}
+			// if (_manual_control_setpoint_sub.update(&_manual_control_setpoint)) {
+			// 	_sticks[0] = _manual_control_setpoint.roll;
+			// 	_sticks[1] = _manual_control_setpoint.pitch;
+			// }
 
 
-			_setpoint.position[0] = 0;
-			_setpoint.position[1] = 0;
-			_setpoint.velocity[0] = 0;
-			_setpoint.velocity[1] = 0;
+			// _setpoint.position[0] = 0;
+			// _setpoint.position[1] = 0;
+			// _setpoint.velocity[0] = 0;
+			// _setpoint.velocity[1] = 0;
 
 			_control.setInputSetpoint(_setpoint, _sticks);
 			////  END CUSTOM MODIFIED CODE ////

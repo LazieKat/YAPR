@@ -43,19 +43,19 @@ param set-default CA_ROTOR3_KM -0.05
 
 #### CUSTOM CODE START ####
 
-# optical flow setup
-param set-default EKF2_OF_CTRL     1
-param set-default EKF2_GPS_CTRL    0
-param set-default UAVCAN_SUB_FLOW  1
-param set-default UAVCAN_SUB_RNG   1
-param set-default EKF2_RNG_A_HMAX  10.0000
-param set-default EKF2_RNG_QLTY_T   0.2000
-param set-default UAVCAN_RNG_MIN    0.0800
-param set-default UAVCAN_RNG_MAX   30.0000
-param set-default SENS_FLOW_MINHGT  0.0800
-param set-default SENS_FLOW_MAXHGT 25.0000
-param set-default SENS_FLOW_MAXR    7.4000
-param set-default EKF2_OF_POS_X     0.1000
+# # optical flow setup
+# param set-default EKF2_OF_CTRL     1
+# param set-default EKF2_GPS_CTRL    0
+# param set-default UAVCAN_SUB_FLOW  1
+# param set-default UAVCAN_SUB_RNG   1
+# param set-default EKF2_RNG_A_HMAX  10.0000
+# param set-default EKF2_RNG_QLTY_T   0.2000
+# param set-default UAVCAN_RNG_MIN    0.0800
+# param set-default UAVCAN_RNG_MAX   30.0000
+# param set-default SENS_FLOW_MINHGT  0.0800
+# param set-default SENS_FLOW_MAXHGT 25.0000
+# param set-default SENS_FLOW_MAXR    7.4000
+# param set-default EKF2_OF_POS_X     0.1000
 
 
 # battery setup

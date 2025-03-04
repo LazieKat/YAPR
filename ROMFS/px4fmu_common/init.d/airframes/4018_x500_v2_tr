@@ -133,19 +133,19 @@ param set-default MC_YAWRATE_K 1.0000
 
 param set-default POS_NO_TILT 1
 
-# optical flow setup
-param set-default EKF2_OF_CTRL     1
-param set-default EKF2_GPS_CTRL    0
-param set-default UAVCAN_SUB_FLOW  1
-param set-default UAVCAN_SUB_RNG   1
-param set-default EKF2_RNG_A_HMAX  10.0000
-param set-default EKF2_RNG_QLTY_T   0.2000
-param set-default UAVCAN_RNG_MIN    0.0800
-param set-default UAVCAN_RNG_MAX   30.0000
-param set-default SENS_FLOW_MINHGT  0.0800
-param set-default SENS_FLOW_MAXHGT 25.0000
-param set-default SENS_FLOW_MAXR    7.4000
-param set-default EKF2_OF_POS_X     0.1000
+# # optical flow setup
+# param set-default EKF2_OF_CTRL     1
+# param set-default EKF2_GPS_CTRL    0
+# param set-default UAVCAN_SUB_FLOW  1
+# param set-default UAVCAN_SUB_RNG   1
+# param set-default EKF2_RNG_A_HMAX  10.0000
+# param set-default EKF2_RNG_QLTY_T   0.2000
+# param set-default UAVCAN_RNG_MIN    0.0800
+# param set-default UAVCAN_RNG_MAX   30.0000
+# param set-default SENS_FLOW_MINHGT  0.0800
+# param set-default SENS_FLOW_MAXHGT 25.0000
+# param set-default SENS_FLOW_MAXR    7.4000
+# param set-default EKF2_OF_POS_X     0.1000
 
 
 # battery setup
@@ -155,6 +155,12 @@ param set-default BAT1_V_CHARGED 4.2000
 
 # radio setup
 param set-default COM_FLTMODE1 8
-param set-default COM_FLTMODE4 6
-param set-default COM_FLTMODE6 2
+param set-default COM_FLTMODE4 7
+param set-default COM_FLTMODE6 11
 param set-default MAN_ARM_GESTURE 0
+
+
+# offboard mode with xrce
+param set-default EKF2_HGT_REF 3
+param set-default UXRCE_DDS_CFG 102
+param set-default SER_TEL2_BAUD 921600

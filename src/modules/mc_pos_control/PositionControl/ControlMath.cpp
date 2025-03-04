@@ -55,8 +55,10 @@ void thrustToAttitude(const Vector3f &thr_sp, const float att_desired[3], vehicl
 		att_sp.thrust_body[2] = thr_sp(2);
 
 		// set quaternion to match roll 0 and pitch 0 and desired yaw
-		float roll  = 0.01745f * att_desired[0];
-		float pitch = 0.01745f * att_desired[1];
+		// float roll  = 0.01745f * att_desired[0];
+		// float pitch = 0.01745f * att_desired[1];
+		float roll  = 0.01745f * 0.f;
+		float pitch = 0.01745f * 0.f;
 		float yaw   = 0.01745f * 0.f;
 
 		Quatf q_sp = Eulerf(roll, pitch, yaw);
