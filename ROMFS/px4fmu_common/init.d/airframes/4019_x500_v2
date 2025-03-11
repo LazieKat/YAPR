@@ -94,4 +94,13 @@ param set-default PWM_AUX_MIN4 900
 
 param set-default PWM_AUX_REV 15
 
+
+# offboard mode with xrce
+param set-default EKF2_HGT_REF 3
+param set-default UXRCE_DDS_CFG 102
+param set-default SER_TEL2_BAUD 921600
+param set-default EKF2_EV_CTRL 7
+param set-default SDLOG_MODE 2
+
+
 #### CUSTOM CODE END ####
