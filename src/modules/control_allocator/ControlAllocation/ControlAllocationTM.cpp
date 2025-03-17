@@ -219,6 +219,7 @@ ControlAllocationTM::allocate()
 		int idx = i * 3;
 
 		float act = sqrtf(_actuator_sp(idx + 1) * _actuator_sp(idx + 1) + _actuator_sp(idx + 2) * _actuator_sp(idx + 2));
+		act = sqrtf(act);
 		motor_sp(i) = act > 1.0f ? 1.0f : act;
 
 
