@@ -53,7 +53,7 @@ private:
 
 	// we need a seperate vector from _actuator_sp to store the actuator setpoints in a way
 	// that can be multiplied with the effectiveness matrix
-	matrix::Vector<float, NUM_ACTUATORS> _allocated_actuators{0};
+	matrix::Vector<float, NUM_ACTUATORS> _allocated_actuators{};
 };
 
 ////    END OF CUSTOM CODE    ////
