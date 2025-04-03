@@ -189,12 +189,6 @@ ControlAllocationTM::normalizeControlAllocationMatrix()
 float
 ControlAllocationTM::deg2pwm(float deg, int servo_num)
 {
-	// restrain to mechanical limit
-	if(deg < _mec_min[servo_num]) deg = _mec_min[servo_num];
-	if(deg > _mec_max[servo_num]) deg = _mec_max[servo_num];
-
-	deg = deg + _trim[servo_num];
-
 	// map min max to -1 to 1 and find the value for deg
 	float value = (deg - _min[servo_num]) / (_max[servo_num] - _min[servo_num]) * 2 - 1;
 	return value;
@@ -214,22 +208,32 @@ ControlAllocationTM::allocate()
 	matrix::Vector<float, NUM_ACTUATORS> motor_sp;
 	matrix::Vector<float, NUM_ACTUATORS> servo_sp;
 
+	_allocated_actuators.zero();
+
 	for (size_t i = 0; i < _servo_count; i++)
 	{
+		// set axis index
 		int idx = i * 3;
 
+		// find magnitude of the motor thrust vector
 		float act = sqrtf(_actuator_sp(idx + 1) * _actuator_sp(idx + 1) + _actuator_sp(idx + 2) * _actuator_sp(idx + 2));
-		motor_sp(i) = act > 1.0f ? 1.0f : act;
+		motor_sp(i) =  math::constrain(act, 0.0f, 1.0f);
 
-
+		// find the angle of the servo if the motor is above the cuttoff
 		float deg = 0;
-
 		if (motor_sp(i) > _tilt_cuttoff)
 		{
 			deg = -atan2f(_actuator_sp(idx+1), _actuator_sp(idx + 2)) * 57.29578f;
 		}
 
+		// set the servo angle to the mechanical min max range
+		deg = math::constrain(deg + _trim[i], _mec_min[i], _mec_max[i]);
+
+		// set the servo angle to the pwm range
 		servo_sp(i) = deg2pwm(deg, i);
+
+		_allocated_actuators(idx+1) = std::sin(deg / 57.2957f) * -motor_sp(i);
+		_allocated_actuators(idx+2) = std::cos(deg / 57.2957f) *  motor_sp(i);
 	}
 
 	for (size_t i = 0; i < _motor_count; i++)
