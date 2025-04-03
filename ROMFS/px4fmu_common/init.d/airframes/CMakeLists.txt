@@ -59,11 +59,12 @@ if(CONFIG_MODULES_MC_RATE_CONTROL)
 		4015_holybro_s500
 		4016_holybro_px4vision
 		4017_nxp_hovergames
-		### CUSTOM AIRFRAME ###
-		4018_x500_v2_tr
-		### END CUSTOM AIRFRAME ###
 		4019_x500_v2
 		4020_holybro_px4vision_v1_5
+		### CUSTOM AIRFRAME ###
+		4021_x500_v2_tr
+		4022_x500_v2_tr_nn
+		### END CUSTOM AIRFRAME ###
 		4041_beta75x
 		4050_generic_250
 		4052_holybro_qav250

@@ -39,6 +39,7 @@ private:
 	void normalizeControlAllocationMatrix();
 	void updateControlAllocationMatrixScale();
 	bool _normalization_needs_update{false};
+	bool _is_normalized{true};
 
 	static const uint _servo_count{4};
 	static const uint _motor_count{4};

@@ -487,6 +487,19 @@ parameters:
               1: 'Single-axis (Lateral)'
               2: 'Single-axis (Bilateral)'
             default: 1
+        CA_NORMALIZED:
+            description:
+                short: Normalize allocation matrix.
+                long: |
+                  If set to false, the allocation matrix will not be normalized.
+                  This allows for use of effectiveness and allocation matrices that
+                  use dimensioned forces and moments. This also takes double square
+                  root of the motors setpoint before allocating tilt angle.
+            type: boolean
+            values:
+              0: 'Non-normalized'
+              1: 'Normalized'
+            default: 1
         ### END CUSTOM CODE ###
 
         # helicopter
@@ -1268,4 +1281,6 @@ mixer:
                         name: "CA_TM_RU"
                       - label: "Axis of tilt"
                         name: "CA_TM_AXIS"
+                      - label: "Normalize Mix"
+                        name: "CA_NORMALIZED"
             ### END CUSTOM CODE ###

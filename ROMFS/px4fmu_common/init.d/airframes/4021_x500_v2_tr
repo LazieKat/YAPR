@@ -70,6 +70,7 @@ param set-default  CA_ROTOR3_KM  -0.05
 
 ########### tiltrotor specific parameters ###########
 
+param set-default CA_NORMALIZED 1
 
 param set-default CA_AIRFRAME 13
 param set-default CA_SV_TL_COUNT 4

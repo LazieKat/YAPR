@@ -35,6 +35,28 @@ ControlAllocationTM::setEffectivenessMatrix(
 		if(_mec_min[i] < _min[i]) this->_mec_min[i] = _min[i];
 		if(_mec_max[i] > _max[i]) this->_mec_max[i] = _max[i];
 	}
+
+
+	// int32_t ca_normalized = 1;
+	// param_t param = param_find("CA_NORMALIZED");
+
+	// if(param == PARAM_INVALID)
+	// {
+	// 	return;
+	// }
+
+	// if(param_get(param, &ca_normalized) != PX4_OK)
+	// {
+	// 	return;
+	// }
+
+	// if (ca_normalized == 0) {
+	// 	_is_normalized = false;
+	// 	_normalization_needs_update = false;
+	// 	_control_allocation_scale.setAll(1.f);
+	// } else {
+	// 	_is_normalized = true;
+	// }
 }
 
 void
@@ -54,7 +76,7 @@ ControlAllocationTM::getParam(const char * name, float * value)
 		return;
 	}
 
-	PX4_INFO("value of param %s is %f", name, (double) *value);
+	// PX4_INFO("value of param %s is %f", name, (double) *value);
 }
 
 void
@@ -63,7 +85,7 @@ ControlAllocationTM::updatePseudoInverse()
 	if (_mix_update_needed) {
 		matrix::geninv(_effectiveness, _mix);
 
-		if (_normalization_needs_update && !_had_actuator_failure) {
+		if (_normalization_needs_update && !_had_actuator_failure && _is_normalized) {
 			updateControlAllocationMatrixScale();
 			_normalization_needs_update = false;
 		}
@@ -208,8 +230,6 @@ ControlAllocationTM::allocate()
 	matrix::Vector<float, NUM_ACTUATORS> motor_sp;
 	matrix::Vector<float, NUM_ACTUATORS> servo_sp;
 
-	_allocated_actuators.zero();
-
 	for (size_t i = 0; i < _servo_count; i++)
 	{
 		// set axis index
@@ -218,6 +238,11 @@ ControlAllocationTM::allocate()
 		// find magnitude of the motor thrust vector
 		float act = sqrtf(_actuator_sp(idx + 1) * _actuator_sp(idx + 1) + _actuator_sp(idx + 2) * _actuator_sp(idx + 2));
 		motor_sp(i) =  math::constrain(act, 0.0f, 1.0f);
+
+		// if(!_is_normalized)
+		// {
+		// 	motor_sp(i) = sqrtf(motor_sp(i));
+		// }
 
 		// find the angle of the servo if the motor is above the cuttoff
 		float deg = 0;
@@ -232,6 +257,7 @@ ControlAllocationTM::allocate()
 		// set the servo angle to the pwm range
 		servo_sp(i) = deg2pwm(deg, i);
 
+		_allocated_actuators(idx)   = 0.0f;
 		_allocated_actuators(idx+1) = std::sin(deg / 57.2957f) * -motor_sp(i);
 		_allocated_actuators(idx+2) = std::cos(deg / 57.2957f) *  motor_sp(i);
 	}
