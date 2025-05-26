@@ -19,7 +19,7 @@ class aaServo
 	hrt_abstime _timestamp_sample{0};
 	hrt_abstime _last_status_pub{0};
 
-	static const uint8_t SERVO_COUNT = 4;
+	static const uint8_t SERVO_COUNT = 8;
 
 	float min[SERVO_COUNT],
               max[SERVO_COUNT],
