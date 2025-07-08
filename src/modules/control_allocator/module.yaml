@@ -500,6 +500,28 @@ parameters:
               0: 'Non-normalized'
               1: 'Normalized'
             default: 1
+        CA_THRUST_P${i}:
+            description:
+                short: The ${i}th degree coefficient
+                long: |
+                  This a coefficient for the 3rd degree polynomial that maps
+                  the thrust in newtons to pwm output [0, 1]
+            type: float
+            decimal: 4
+            num_instances: 4
+            instance_start: 0
+            default: 0.0
+        CA_HAS_POLY:
+            description:
+                short: The ariframe uses a thrust polynomial
+                long: |
+                  The airframe uses a 3rd degree polynomial that maps
+                  the thrust in newtons to pwm output [0, 1]
+            type: enum
+            values:
+              0: 'False'
+              1: 'True'
+            default: 0
         ### END CUSTOM CODE ###
 
         # helicopter
@@ -1283,4 +1305,8 @@ mixer:
                         name: "CA_TM_AXIS"
                       - label: "Normalize Mix"
                         name: "CA_NORMALIZED"
+                      - label: "Thrust Polynomial"
+                        name: "CA_HAS_POLY"
+                      - label: "Polynomial Coef ${i}"
+                        name: "CA_THRUST_P${i}"
             ### END CUSTOM CODE ###

@@ -36,18 +36,22 @@ ControlAllocationTM::setEffectivenessMatrix(
 		if(_mec_max[i] > _max[i]) this->_mec_max[i] = _max[i];
 	}
 
+	for(uint i = 0; i < _poly_deg; i++)
+	{
+		char name[20];
+		sprintf(name, "CA_THRUST_P%d", i);
+		getParam(name, &this->_poly[i]);
+	}
 
 	int32_t ca_normalized = 1;
 	param_t param = param_find("CA_NORMALIZED");
 
-	if(param == PARAM_INVALID)
+	if(param != PARAM_INVALID)
 	{
-		return;
-	}
-
-	if(param_get(param, &ca_normalized) != PX4_OK)
-	{
-		return;
+		if(param_get(param, &ca_normalized) != PX4_OK)
+		{
+			PX4_ERR("Failed to get parameter CA_NORMALIZED");
+		}
 	}
 
 	if (ca_normalized == 0) {
@@ -56,6 +60,24 @@ ControlAllocationTM::setEffectivenessMatrix(
 		_control_allocation_scale.setAll(1.f);
 	} else {
 		_is_normalized = true;
+	}
+
+
+	int32_t ca_has_poly = 0;
+	param = param_find("CA_HAS_POLY");
+
+	if(param != PARAM_INVALID)
+	{
+		if(param_get(param, &ca_has_poly) != PX4_OK)
+		{
+			PX4_ERR("Failed to get parameter CA_NORMALIZED");
+		}
+	}
+
+	if (ca_has_poly == 1) {
+		_has_poly = true;
+	} else {
+		_has_poly = false;
 	}
 }
 
@@ -217,6 +239,28 @@ ControlAllocationTM::deg2pwm(float deg, int servo_num)
 }
 
 void
+ControlAllocationTM::applyPoly(matrix::Vector<float, NUM_ACTUATORS> &motor_sp)
+{
+	if (!_has_poly) {
+		return;
+	}
+
+	for (size_t i = 0; i < _motor_count; i++)
+	{
+		float thrust = motor_sp(i);
+
+		if (thrust <= 0.0f) {
+			motor_sp(i) = 0.0f;
+			continue;
+		}
+
+		float pwm = _poly[0] + thrust * (_poly[1] + thrust * (_poly[2] + thrust * _poly[3]));
+
+		motor_sp(i) = math::constrain(pwm, 0.0f, 1.0f);
+	}
+}
+
+void
 ControlAllocationTM::allocate()
 {
 	//Compute new gains if needed
@@ -261,6 +305,8 @@ ControlAllocationTM::allocate()
 		_allocated_actuators(idx+1) = std::sin(deg / 57.2957f) * -motor_sp(i);
 		_allocated_actuators(idx+2) = std::cos(deg / 57.2957f) *  motor_sp(i);
 	}
+
+	applyPoly(motor_sp);
 
 	for (size_t i = 0; i < _motor_count; i++)
 	{

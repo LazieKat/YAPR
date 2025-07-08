@@ -36,6 +36,8 @@ private:
 	void getParam(const char * name, float * value);
 	float deg2pwm(float deg, int servo_num);
 
+	void applyPoly(matrix::Vector<float, NUM_ACTUATORS> &motor_sp);
+
 	void normalizeControlAllocationMatrix();
 	void updateControlAllocationMatrixScale();
 	bool _normalization_needs_update{false};
@@ -43,6 +45,7 @@ private:
 
 	static const uint _servo_count{4};
 	static const uint _motor_count{4};
+	static const uint _poly_deg{4};
 
 	float _min[_servo_count];
 	float _max[_servo_count];
@@ -51,9 +54,15 @@ private:
 	float _trim[_servo_count];
 	float _tilt_cuttoff{0.0f};
 
+
+	bool _has_poly{false};
+
+	float _poly[_poly_deg] {}; // polynomial coefficients for thrust to pwm conversion
+
 	// we need a seperate vector from _actuator_sp to store the actuator setpoints in a way
 	// that can be multiplied with the effectiveness matrix
 	matrix::Vector<float, NUM_ACTUATORS> _allocated_actuators{};
+
 };
 
 ////    END OF CUSTOM CODE    ////
