@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# @name Tiltrotor X500 V2
+# @name Tiltrotor X500 V2 - ROS2
 #
 # @type Tiltrotor Quadrotor x
 # @class Copter
