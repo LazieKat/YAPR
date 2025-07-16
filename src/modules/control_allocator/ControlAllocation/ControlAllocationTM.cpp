@@ -241,10 +241,6 @@ ControlAllocationTM::deg2pwm(float deg, int servo_num)
 void
 ControlAllocationTM::applyPoly(matrix::Vector<float, NUM_ACTUATORS> &motor_sp)
 {
-	if (!_has_poly) {
-		return;
-	}
-
 	for (size_t i = 0; i < _motor_count; i++)
 	{
 		float thrust = motor_sp(i);
@@ -254,9 +250,12 @@ ControlAllocationTM::applyPoly(matrix::Vector<float, NUM_ACTUATORS> &motor_sp)
 			continue;
 		}
 
-		float pwm = _poly[0] + thrust * (_poly[1] + thrust * (_poly[2] + thrust * _poly[3]));
+		if(_has_poly)
+		{
+			thrust = _poly[0] + thrust * (_poly[1] + thrust * (_poly[2] + thrust * _poly[3]));
+		}
 
-		motor_sp(i) = math::constrain(pwm, 0.0f, 1.0f);
+		motor_sp(i) = math::constrain(thrust, 0.0f, 1.0f);
 	}
 }
 
@@ -280,13 +279,13 @@ ControlAllocationTM::allocate()
 		int idx = i * 3;
 
 		// find magnitude of the motor thrust vector
-		float act = sqrtf(_actuator_sp(idx + 1) * _actuator_sp(idx + 1) + _actuator_sp(idx + 2) * _actuator_sp(idx + 2));
-		motor_sp(i) =  math::constrain(act, 0.0f, 1.0f);
+		motor_sp(i) = sqrtf(_actuator_sp(idx + 1) * _actuator_sp(idx + 1) + _actuator_sp(idx + 2) * _actuator_sp(idx + 2));
+		// motor_sp(i) =  math::constrain(act, 0.0f, 1.0f);
 
-		if(!_is_normalized)
-		{
-			motor_sp(i) = sqrtf(motor_sp(i));
-		}
+		// if(!_is_normalized)
+		// {
+		// 	motor_sp(i) = sqrtf(motor_sp(i));
+		// }
 
 		// find the angle of the servo if the motor is above the cuttoff
 		float deg = 0;
