@@ -51,6 +51,74 @@ ControlAllocationPseudoInverse::setEffectivenessMatrix(
 			update_normalization_scale);
 	_mix_update_needed = true;
 	_normalization_needs_update = update_normalization_scale;
+
+
+
+	for(uint i = 0; i < _poly_deg; i++)
+	{
+		char name[20];
+		sprintf(name, "CA_THRUST_P%d", i);
+		getParam(name, &this->_poly[i]);
+	}
+
+
+	int32_t ca_normalized = 1;
+	param_t param = param_find("CA_NORMALIZED");
+
+	if(param != PARAM_INVALID)
+	{
+		if(param_get(param, &ca_normalized) != PX4_OK)
+		{
+			PX4_ERR("Failed to get parameter CA_NORMALIZED");
+		}
+	}
+
+	if (ca_normalized == 0) {
+		_is_normalized = false;
+		_normalization_needs_update = false;
+		_control_allocation_scale.setAll(1.f);
+	} else {
+		_is_normalized = true;
+	}
+
+
+	int32_t ca_has_poly = 0;
+	param = param_find("CA_HAS_POLY");
+
+	if(param != PARAM_INVALID)
+	{
+		if(param_get(param, &ca_has_poly) != PX4_OK)
+		{
+			PX4_ERR("Failed to get parameter CA_NORMALIZED");
+		}
+	}
+
+	if (ca_has_poly == 1) {
+		_has_poly = true;
+	} else {
+		_has_poly = false;
+	}
+}
+
+
+void
+ControlAllocationPseudoInverse::getParam(const char * name, float * value)
+{
+	param_t param = param_find(name);
+
+	if(param == PARAM_INVALID)
+	{
+		PX4_ERR("Parameter %s not found", name);
+		return;
+	}
+
+	if(param_get(param, value) != PX4_OK)
+	{
+		PX4_ERR("Failed to get parameter %s", name);
+		return;
+	}
+
+	// PX4_INFO("value of param %s is %f", name, (double) *value);
 }
 
 void
@@ -59,7 +127,7 @@ ControlAllocationPseudoInverse::updatePseudoInverse()
 	if (_mix_update_needed) {
 		matrix::geninv(_effectiveness, _mix);
 
-		if (_normalization_needs_update && !_had_actuator_failure) {
+		if (_normalization_needs_update && !_had_actuator_failure && _is_normalized) {
 			updateControlAllocationMatrixScale();
 			_normalization_needs_update = false;
 		}
@@ -168,6 +236,28 @@ ControlAllocationPseudoInverse::normalizeControlAllocationMatrix()
 	}
 }
 
+
+void
+ControlAllocationPseudoInverse::applyPoly(matrix::Vector<float, NUM_ACTUATORS> &motor_sp)
+{
+	for (size_t i = 0; i < _motor_count; i++)
+	{
+		float thrust = motor_sp(i);
+
+		if (thrust <= 0.0f) {
+			motor_sp(i) = 0.0f;
+			continue;
+		}
+
+		if(_has_poly)
+		{
+			thrust = _poly[0] + thrust * (_poly[1] + thrust * (_poly[2] + thrust * _poly[3]));
+		}
+
+		motor_sp(i) = math::constrain(thrust, 0.0f, 1.0f);
+	}
+}
+
 void
 ControlAllocationPseudoInverse::allocate()
 {
@@ -177,5 +267,11 @@ ControlAllocationPseudoInverse::allocate()
 	_prev_actuator_sp = _actuator_sp;
 
 	// Allocate
-	_actuator_sp = _actuator_trim + _mix * (_control_sp - _control_trim);
+	// _actuator_sp = _actuator_trim + _mix * (_control_sp - _control_trim);
+	_actuator_sp = _mix * _control_sp ;
+
+	// Apply polynomial if needed
+	if (_has_poly) {
+		applyPoly(_actuator_sp);
+	}
 }

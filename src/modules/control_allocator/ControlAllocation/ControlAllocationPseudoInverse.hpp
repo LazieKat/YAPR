@@ -72,7 +72,21 @@ protected:
 	void updatePseudoInverse();
 
 private:
+	float eps = 1e-5f;
+
+	void getParam(const char * name, float * value);
+	void applyPoly(matrix::Vector<float, NUM_ACTUATORS> &motor_sp);
+
+
 	void normalizeControlAllocationMatrix();
 	void updateControlAllocationMatrixScale();
 	bool _normalization_needs_update{false};
+	bool _is_normalized{true};
+
+	static const uint _motor_count{4};
+
+	static const uint _poly_deg{4};
+
+	bool _has_poly{false};
+	float _poly[_poly_deg] {}; // polynomial coefficients for thrust to pwm conversion
 };
