@@ -641,21 +641,21 @@ ControlAllocator::update_effectiveness_matrix_if_needed(EffectivenessUpdateReaso
 			// That ensures that the algorithm doesn't try to control axes with only marginal control authority,
 			// which in turn would degrade the control of the main axes that actually should and can be controlled.
 
-			ActuatorEffectiveness::EffectivenessMatrix &matrix = config.effectiveness_matrices[i];
+			// ActuatorEffectiveness::EffectivenessMatrix &matrix = config.effectiveness_matrices[i];
 
-			for (int n = 0; n < NUM_AXES; n++) {
-				bool all_entries_small = true;
+			// for (int n = 0; n < NUM_AXES; n++) {
+			// 	bool all_entries_small = true;
 
-				for (int m = 0; m < config.num_actuators_matrix[i]; m++) {
-					if (fabsf(matrix(n, m)) > 0.05f) {
-						all_entries_small = false;
-					}
-				}
+			// 	for (int m = 0; m < config.num_actuators_matrix[i]; m++) {
+			// 		if (fabsf(matrix(n, m)) > 0.05f) {
+			// 			all_entries_small = false;
+			// 		}
+			// 	}
 
-				if (all_entries_small) {
-					matrix.row(n) = 0.f;
-				}
-			}
+			// 	if (all_entries_small) {
+			// 		matrix.row(n) = 0.f;
+			// 	}
+			// }
 
 			// Assign control effectiveness matrix
 			int total_num_actuators = config.num_actuators_matrix[i];
